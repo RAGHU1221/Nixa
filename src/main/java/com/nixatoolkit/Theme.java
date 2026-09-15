@@ -95,6 +95,7 @@ public final class Theme {
         button.setFocusPainted(false);
         button.setOpaque(true);
         button.setContentAreaFilled(true);
+        button.setRolloverEnabled(true);
         button.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(danger ? DANGER : (primary ? TEAL : LINE), 1),
                 BorderFactory.createEmptyBorder(7, 12, 7, 12)));

@@ -61,8 +61,13 @@ public final class ScannerUtil {
             "  $device = $info.Connect()\n" +
             "  $item = $device.Items.Item(1)\n" +
             "  foreach ($property in $item.Properties) {\n" +
-            "    if ($property.PropertyID -eq 6147 -or $property.PropertyID -eq 6148) { $property.Value = $Dpi }\n" +
+            "    try {\n" +
+            "      if ($property.PropertyID -eq 6146) { $property.Value = 24 }\n" +
+            "      if ($property.PropertyID -eq 6147 -or $property.PropertyID -eq 6148) { $property.Value = $Dpi }\n" +
+            "    } catch { }\n" +
             "  }\n" +
+            "  try { $item.Properties.Item(6147).Value = $Dpi } catch { }\n" +
+            "  try { $item.Properties.Item(6148).Value = $Dpi } catch { }\n" +
             "} catch {\n" +
             "  Write-Error \"Scanner setup failed: $_\"\n" +
             "  exit 3\n" +

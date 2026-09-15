@@ -258,6 +258,7 @@ public class ScanPanel extends JPanel implements ToolPanel {
         }
         listPanel.revalidate();
         listPanel.repaint();
+        Theme.styleButtons(listPanel);
     }
 
     private JPanel pageRow(int idx) {
@@ -266,10 +267,10 @@ public class ScanPanel extends JPanel implements ToolPanel {
         row.setBackground(Theme.SURFACE);
         row.setBorder(BorderFactory.createEmptyBorder(6, 10, 6, 10));
         row.setAlignmentX(Component.LEFT_ALIGNMENT);
-        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 210));
+        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 340));
 
-        int previewWidth = 220;
-        int previewHeight = 175;
+        int previewWidth = 360;
+        int previewHeight = 300;
         double scale = Math.min((double) previewWidth / img.getWidth(),
             (double) previewHeight / img.getHeight());
         int scaledWidth = Math.max(1, (int) Math.round(img.getWidth() * scale));
@@ -298,11 +299,17 @@ public class ScanPanel extends JPanel implements ToolPanel {
         JButton up = new JButton("Prev");
         up.setPreferredSize(new Dimension(68, 34));
         up.setFont(Theme.uiFont(12));
+        up.setEnabled(idx > 0);
         up.addActionListener(e -> movePage(idx, -1));
         JButton down = new JButton("Next");
         down.setPreferredSize(new Dimension(68, 34));
         down.setFont(Theme.uiFont(12));
+        down.setEnabled(idx < pages.size() - 1);
         down.addActionListener(e -> movePage(idx, 1));
+        JButton preview = new JButton("Preview");
+        preview.setPreferredSize(new Dimension(82, 34));
+        preview.setFont(Theme.uiFont(12));
+        preview.addActionListener(e -> showPreview(img, idx));
         JButton del = new JButton("Delete");
         del.setPreferredSize(new Dimension(76, 34));
         del.setFont(Theme.uiFont(12));
@@ -310,10 +317,21 @@ public class ScanPanel extends JPanel implements ToolPanel {
         del.addActionListener(e -> deletePage(idx));
         btnRow.add(up);
         btnRow.add(down);
+        btnRow.add(preview);
         btnRow.add(del);
         row.add(btnRow, BorderLayout.EAST);
 
         return row;
+    }
+
+    private void showPreview(BufferedImage image, int index) {
+        JLabel imageLabel = new JLabel(new ImageIcon(image));
+        imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        imageLabel.setVerticalAlignment(SwingConstants.CENTER);
+        JScrollPane previewScroll = new JScrollPane(imageLabel);
+        previewScroll.setPreferredSize(new Dimension(700, 560));
+        JOptionPane.showMessageDialog(this, previewScroll, "Preview - Page " + (index + 1),
+                JOptionPane.PLAIN_MESSAGE);
     }
 
     private void movePage(int idx, int dir) {
