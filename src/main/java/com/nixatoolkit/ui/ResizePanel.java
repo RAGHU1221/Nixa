@@ -37,6 +37,9 @@ public class ResizePanel extends JPanel implements ToolPanel {
     private final JTextField wEntry = new JTextField(5);
     private final JTextField hEntry = new JTextField(5);
     private final JTextField kbEntry = new JTextField(5);
+    private final JCheckBox borderCheck = new JCheckBox("Add border");
+    private final JComboBox<String> borderColorMenu = new JComboBox<>(new String[]{"Black", "White"});
+    private final JTextField borderWidthEntry = new JTextField("2", 3);
     private final JButton runBtn = new JButton("⚙ Resize + Compress");
     private final JButton cropBtn = new JButton("Crop Image");
     private final JButton scanBtn = new JButton("Scan Photo");
@@ -77,6 +80,15 @@ public class ResizePanel extends JPanel implements ToolPanel {
         controls.add(hEntry);
         controls.add(labeled("Max KB:"));
         controls.add(kbEntry);
+        borderCheck.setOpaque(false);
+        borderCheck.setFont(Theme.uiFont(12));
+        controls.add(borderCheck);
+        borderColorMenu.setFont(Theme.uiFont(12));
+        borderColorMenu.setPreferredSize(new Dimension(90, 28));
+        controls.add(borderColorMenu);
+        controls.add(labeled("Border px:"));
+        borderWidthEntry.setPreferredSize(new Dimension(42, 26));
+        controls.add(borderWidthEntry);
         top.add(controls);
         applyPreset();
 
@@ -312,7 +324,29 @@ public class ResizePanel extends JPanel implements ToolPanel {
     /** Package-visible, synchronous crop+resize+compress pass - used by onRun above and by tests. */
     ImageUtil.CompressResult resizeCompressSync(int w, int h, double targetKb) {
         BufferedImage cropped = ImageUtil.cropResizeCover(srcImg, w, h);
+        if (borderCheck.isSelected()) {
+            cropped = addBorder(cropped);
+        }
         return ImageUtil.compressToTargetKb(cropped, targetKb, 0.6);
+    }
+
+    private BufferedImage addBorder(BufferedImage source) {
+        int borderWidth;
+        try {
+            borderWidth = Integer.parseInt(borderWidthEntry.getText().trim());
+        } catch (NumberFormatException e) {
+            borderWidth = 2;
+        }
+        borderWidth = Math.max(1, Math.min(borderWidth, Math.min(source.getWidth(), source.getHeight()) / 2));
+        BufferedImage bordered = new BufferedImage(source.getWidth(), source.getHeight(), BufferedImage.TYPE_INT_RGB);
+        Graphics2D graphics = bordered.createGraphics();
+        graphics.drawImage(source, 0, 0, null);
+        graphics.setColor("White".equals(borderColorMenu.getSelectedItem()) ? Color.WHITE : Color.BLACK);
+        graphics.setStroke(new BasicStroke(borderWidth));
+        int inset = borderWidth / 2;
+        graphics.drawRect(inset, inset, source.getWidth() - borderWidth, source.getHeight() - borderWidth);
+        graphics.dispose();
+        return bordered;
     }
 
     /** Package-visible - applies a resizeCompressSync result to UI state; used by onRun and tests. */

@@ -30,6 +30,8 @@ public class CompressPanel extends JPanel implements ToolPanel {
     private boolean resultOverLimit;
 
     private final JTextField targetEntry = new JTextField("100", 6);
+        private final JComboBox<String> qualityMenu = new JComboBox<>(
+            new String[]{"Best quality", "Balanced", "Smallest file"});
     private final JButton compressBtn = new JButton("⚙ Compress");
     private final JLabel pdfNote = new JLabel();
     private final JLabel beforeLabel = new JLabel(" ");
@@ -60,6 +62,10 @@ public class CompressPanel extends JPanel implements ToolPanel {
         tLbl.setFont(Theme.uiFont(12));
         controls.add(tLbl);
         controls.add(targetEntry);
+        controls.add(new JLabel("Quality:"));
+        qualityMenu.setFont(Theme.uiFont(12));
+        qualityMenu.setPreferredSize(new Dimension(135, 30));
+        controls.add(qualityMenu);
         JButton chooseBtn = new JButton("📁 Choose Photo or PDF");
         chooseBtn.setFont(Theme.uiFont(13));
         chooseBtn.addActionListener(e -> onChoose());
@@ -207,7 +213,14 @@ public class CompressPanel extends JPanel implements ToolPanel {
 
     /** Package-visible, synchronous image compression - used by onCompress above and by tests. */
     ImageUtil.CompressResult compressImageSync(double targetKb) {
-        return ImageUtil.compressToTargetKb(srcImg, targetKb, 0.35);
+        return ImageUtil.compressToTargetKb(srcImg, targetKb, selectedMinScale());
+    }
+
+    private double selectedMinScale() {
+        String mode = (String) qualityMenu.getSelectedItem();
+        if ("Smallest file".equals(mode)) return 0.35;
+        if ("Balanced".equals(mode)) return 0.55;
+        return 0.85;
     }
 
     /** Package-visible - applies an image compress result to UI state; used by onCompress and tests. */
@@ -265,7 +278,7 @@ public class CompressPanel extends JPanel implements ToolPanel {
         BufferedImage firstPreview = null;
         for (byte[] jpeg : jpegs) {
             BufferedImage page = PdfUtil.decodeJpeg(jpeg);
-            ImageUtil.CompressResult r = ImageUtil.compressToTargetKb(page, perPageKb, 0.5);
+            ImageUtil.CompressResult r = ImageUtil.compressToTargetKb(page, perPageKb, selectedMinScale());
             outJpegs.add(r.data);
             sizes.add(new int[]{r.width, r.height});
             if (firstPreview == null) {
