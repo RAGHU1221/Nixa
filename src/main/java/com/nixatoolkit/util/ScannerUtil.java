@@ -64,10 +64,15 @@ public final class ScannerUtil {
             "    try {\n" +
             "      if ($property.PropertyID -eq 6146) { $property.Value = 24 }\n" +
             "      if ($property.PropertyID -eq 6147 -or $property.PropertyID -eq 6148) { $property.Value = $Dpi }\n" +
+            "      if ($property.PropertyID -eq 6149 -or $property.PropertyID -eq 6150) { $property.Value = 0 }\n" +
             "    } catch { }\n" +
             "  }\n" +
             "  try { $item.Properties.Item(6147).Value = $Dpi } catch { }\n" +
             "  try { $item.Properties.Item(6148).Value = $Dpi } catch { }\n" +
+            "  try { $item.Properties.Item(6149).Value = 0 } catch { }\n" +
+            "  try { $item.Properties.Item(6150).Value = 0 } catch { }\n" +
+            "  try { $item.Properties.Item(6151).Value = $item.Properties.Item(6151).SubTypeMax } catch { }\n" +
+            "  try { $item.Properties.Item(6152).Value = $item.Properties.Item(6152).SubTypeMax } catch { }\n" +
             "} catch {\n" +
             "  Write-Error \"Scanner setup failed: $_\"\n" +
             "  exit 3\n" +
