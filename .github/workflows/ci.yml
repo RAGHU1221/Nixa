@@ -90,10 +90,13 @@ jobs:
             $jpackageArgs += @('--icon', 'packaging/icon.ico')
           }
           & jpackage @jpackageArgs
+          $installer = Get-ChildItem dist-installer -Filter *.exe | Select-Object -First 1
+          $hash = (Get-FileHash $installer.FullName -Algorithm SHA256).Hash.ToLower()
+          "$hash  $($installer.Name)" | Set-Content dist-installer/SHA256SUMS.txt
 
       - name: Upload Windows installer
         uses: actions/upload-artifact@v4
         with:
           name: nixa-toolkit-windows-exe
-          path: dist-installer/*.exe
+          path: dist-installer/*
           if-no-files-found: error
