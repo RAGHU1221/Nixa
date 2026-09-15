@@ -1,0 +1,278 @@
+package com.nixatoolkit.ui;
+
+import com.nixatoolkit.App;
+import com.nixatoolkit.Theme;
+import com.nixatoolkit.util.HistoryStore;
+import com.nixatoolkit.util.ImageUtil;
+
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+public class ResizePanel extends JPanel implements ToolPanel {
+    private final App app;
+    private BufferedImage srcImg;
+    private File srcFile;
+    private byte[] resultData;
+    private int resultW, resultH;
+
+    private static final Map<String, int[]> PRESETS = new LinkedHashMap<>();
+    static {
+        PRESETS.put("Passport Photo — 200x230px, <=20KB", new int[]{200, 230, 20});
+        PRESETS.put("Aadhaar / e-KYC Photo — 200x230px, <=50KB", new int[]{200, 230, 50});
+        PRESETS.put("PAN Card Photo — 213x213px, <=20KB", new int[]{213, 213, 20});
+        PRESETS.put("Signature — 140x60px, <=20KB", new int[]{140, 60, 20});
+        PRESETS.put("Exam Application Photo — 100x120px, <=30KB", new int[]{100, 120, 30});
+        PRESETS.put("Custom", new int[]{200, 230, 20});
+    }
+
+    private final JComboBox<String> presetMenu = new JComboBox<>(PRESETS.keySet().toArray(new String[0]));
+    private final JTextField wEntry = new JTextField(5);
+    private final JTextField hEntry = new JTextField(5);
+    private final JTextField kbEntry = new JTextField(5);
+    private final JButton runBtn = new JButton("⚙ Resize + Compress");
+    private final JLabel beforeLabel = new JLabel(" ");
+    private final JLabel afterLabel = new JLabel(" ");
+    private final JLabel beforeImgLabel = new JLabel();
+    private final JLabel afterImgLabel = new JLabel();
+    private final JButton saveBtn = new JButton("⬇ Save Result");
+
+    public ResizePanel(App app) {
+        this.app = app;
+        setOpaque(false);
+        setLayout(new BorderLayout(0, 10));
+
+        ScrollableBox top = new ScrollableBox();
+        top.setOpaque(false);
+        top.setLayout(new BoxLayout(top, BoxLayout.Y_AXIS));
+
+        JLabel header = new JLabel("படிவ புகைப்படம் · Form Photo & Signature");
+        header.setFont(Theme.uiFont(Font.BOLD, 20));
+        header.setAlignmentX(Component.LEFT_ALIGNMENT);
+        top.add(header);
+        top.add(Box.createVerticalStrut(10));
+
+        JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 10));
+        controls.setBackground(Theme.SURFACE);
+        controls.setAlignmentX(Component.LEFT_ALIGNMENT);
+        JLabel pLbl = new JLabel("Preset:");
+        pLbl.setFont(Theme.uiFont(12));
+        controls.add(pLbl);
+        presetMenu.setFont(Theme.uiFont(12));
+        presetMenu.addActionListener(e -> applyPreset());
+        controls.add(presetMenu);
+        controls.add(labeled("Width(px):"));
+        controls.add(wEntry);
+        controls.add(labeled("Height(px):"));
+        controls.add(hEntry);
+        controls.add(labeled("Max KB:"));
+        controls.add(kbEntry);
+        top.add(controls);
+        applyPreset();
+
+        JLabel note = new JLabel("<html><div style='width:820px'>இவை பொதுவாக பயன்படும் அளவுகள் — "
+                + "ஒவ்வொரு போர்டல் notification-லும் exact spec மாறலாம். Upload செய்யும் site-ல் சொல்லிருக்கிற "
+                + "அளவை பாத்து Custom-ல் மாற்றிக்கோங்க.</div></html>");
+        note.setFont(Theme.uiFont(11));
+        note.setForeground(Theme.WARN);
+        note.setOpaque(true);
+        note.setBackground(Theme.WARN_BG);
+        note.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        note.setAlignmentX(Component.LEFT_ALIGNMENT);
+        top.add(note);
+        top.add(Box.createVerticalStrut(8));
+
+        JPanel btnRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        btnRow.setOpaque(false);
+        btnRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+        JButton chooseBtn = new JButton("📁 Choose Photo");
+        chooseBtn.setFont(Theme.uiFont(13));
+        chooseBtn.addActionListener(e -> onChoose());
+        runBtn.setFont(Theme.uiFont(13));
+        runBtn.setEnabled(false);
+        runBtn.addActionListener(e -> onRun());
+        btnRow.add(chooseBtn);
+        btnRow.add(runBtn);
+        top.add(btnRow);
+        top.add(Box.createVerticalStrut(8));
+
+        JPanel resultPanel = new JPanel(new GridLayout(1, 2, 16, 0));
+        resultPanel.setBackground(Theme.SURFACE);
+        resultPanel.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
+        resultPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        resultPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 320));
+        JPanel beforeBox = new JPanel();
+        beforeBox.setOpaque(false);
+        beforeBox.setLayout(new BoxLayout(beforeBox, BoxLayout.Y_AXIS));
+        beforeLabel.setFont(Theme.uiFont(12));
+        beforeBox.add(beforeLabel);
+        beforeBox.add(beforeImgLabel);
+        resultPanel.add(beforeBox);
+        JPanel afterBox = new JPanel();
+        afterBox.setOpaque(false);
+        afterBox.setLayout(new BoxLayout(afterBox, BoxLayout.Y_AXIS));
+        afterLabel.setFont(Theme.uiFont(12));
+        afterBox.add(afterLabel);
+        afterBox.add(afterImgLabel);
+        resultPanel.add(afterBox);
+        top.add(resultPanel);
+        top.add(Box.createVerticalStrut(6));
+
+        saveBtn.setFont(Theme.uiFont(13));
+        saveBtn.setEnabled(false);
+        saveBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
+        saveBtn.addActionListener(e -> onSave());
+        top.add(saveBtn);
+
+        JScrollPane scroll = new JScrollPane(top);
+        scroll.setBorder(null);
+        scroll.getVerticalScrollBar().setUnitIncrement(16);
+        scroll.setOpaque(false);
+        scroll.getViewport().setOpaque(false);
+        add(scroll, BorderLayout.CENTER);
+    }
+
+    private JLabel labeled(String text) {
+        JLabel l = new JLabel(text);
+        l.setFont(Theme.uiFont(12));
+        return l;
+    }
+
+    private void applyPreset() {
+        int[] v = PRESETS.get(presetMenu.getSelectedItem());
+        wEntry.setText(String.valueOf(v[0]));
+        hEntry.setText(String.valueOf(v[1]));
+        kbEntry.setText(String.valueOf(v[2]));
+    }
+
+    private void onChoose() {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setFileFilter(new FileNameExtensionFilter("Images", "jpg", "jpeg", "png", "bmp", "tif", "tiff"));
+        int result = chooser.showOpenDialog(this);
+        if (result != JFileChooser.APPROVE_OPTION) return;
+        srcFile = chooser.getSelectedFile();
+        try {
+            BufferedImage img = ImageIO.read(srcFile);
+            if (img == null) throw new IOException("Unsupported image");
+            srcImg = ImageUtil.toRgb(img);
+        } catch (Exception e) {
+            app.flash("படத்தை திறக்க முடியல்: " + e.getMessage(), StatusBar.Kind.ERR);
+            return;
+        }
+        runBtn.setEnabled(true);
+        Image thumb = srcImg.getScaledInstance(260, -1, Image.SCALE_SMOOTH);
+        beforeImgLabel.setIcon(new ImageIcon(thumb));
+        beforeLabel.setText("Original — " + ImageUtil.humanSize(srcFile.length()));
+        afterImgLabel.setIcon(null);
+        afterLabel.setText(" ");
+        saveBtn.setEnabled(false);
+        resultData = null;
+    }
+
+    private void onRun() {
+        if (srcImg == null) return;
+        int w, h;
+        double targetKb;
+        try {
+            w = Integer.parseInt(wEntry.getText().trim());
+            h = Integer.parseInt(hEntry.getText().trim());
+            targetKb = Double.parseDouble(kbEntry.getText().trim());
+        } catch (NumberFormatException e) {
+            app.flash("Width/Height/KB-க்கு சரியான எண்களை போடவும்.", StatusBar.Kind.ERR);
+            return;
+        }
+        ImageUtil.CompressResult r = resizeCompressSync(w, h, targetKb);
+        applyResizeResult(r, targetKb);
+    }
+
+    /** Package-visible, synchronous crop+resize+compress pass - used by onRun above and by tests. */
+    ImageUtil.CompressResult resizeCompressSync(int w, int h, double targetKb) {
+        BufferedImage cropped = ImageUtil.cropResizeCover(srcImg, w, h);
+        return ImageUtil.compressToTargetKb(cropped, targetKb, 0.6);
+    }
+
+    /** Package-visible - applies a resizeCompressSync result to UI state; used by onRun and tests. */
+    void applyResizeResult(ImageUtil.CompressResult r, double targetKb) {
+        resultData = r.data;
+        resultW = r.width;
+        resultH = r.height;
+        try {
+            BufferedImage preview = ImageIO.read(new java.io.ByteArrayInputStream(r.data));
+            afterImgLabel.setIcon(new ImageIcon(preview));
+        } catch (IOException ignored) {
+        }
+        boolean within = r.data.length / 1024.0 <= targetKb + 1;
+        String mark = within ? "✓" : "⚠";
+        afterLabel.setText(mark + " " + r.width + "x" + r.height + "px — " + ImageUtil.humanSize(r.data.length));
+        saveBtn.setEnabled(true);
+        app.flash(within ? "✓ Ready." : "⚠ Closest possible size-க்கு தயார் ஆச்சு.",
+                within ? StatusBar.Kind.OK : StatusBar.Kind.WARN);
+    }
+
+    private void onSave() {
+        if (resultData == null) return;
+        String base = srcFile.getName();
+        int dot = base.lastIndexOf('.');
+        if (dot > 0) base = base.substring(0, dot);
+        String preset = ((String) presetMenu.getSelectedItem()).split(" ")[0].toLowerCase();
+
+        JFileChooser chooser = new JFileChooser();
+        chooser.setFileFilter(new FileNameExtensionFilter("JPEG", "jpg"));
+        chooser.setSelectedFile(new File(base + "-" + preset + ".jpg"));
+        int result = chooser.showSaveDialog(this);
+        if (result != JFileChooser.APPROVE_OPTION) return;
+        File out = chooser.getSelectedFile();
+        if (!out.getName().toLowerCase().endsWith(".jpg")) {
+            out = new File(out.getParentFile(), out.getName() + ".jpg");
+        }
+        try {
+            saveResultTo(out);
+            app.flash("✓ Saved: " + out.getName(), StatusBar.Kind.OK);
+        } catch (IOException e) {
+            app.flash("Save தோல்வி: " + e.getMessage(), StatusBar.Kind.ERR);
+        }
+    }
+
+    /** Package-visible - writes the current resize result to an explicit path; used by onSave and tests. */
+    void saveResultTo(File out) throws IOException {
+        Files.write(out.toPath(), resultData);
+        HistoryStore.logAction("resize",
+                presetMenu.getSelectedItem() + " -> " + out.getName() + " (" + resultW + "x" + resultH + "px)");
+    }
+
+    /** Package-visible - loads a photo file into state as if chosen via dialog; used by tests. */
+    void loadImageForTest(File f) throws IOException {
+        srcFile = f;
+        BufferedImage img = ImageIO.read(f);
+        if (img == null) throw new IOException("Unsupported image");
+        srcImg = ImageUtil.toRgb(img);
+        resultData = null;
+    }
+
+    byte[] resultDataForTest() {
+        return resultData;
+    }
+
+    int resultWForTest() {
+        return resultW;
+    }
+
+    int resultHForTest() {
+        return resultH;
+    }
+
+    void selectPresetForTest(String key) {
+        presetMenu.setSelectedItem(key);
+    }
+
+    @Override
+    public void onShow() {
+    }
+}

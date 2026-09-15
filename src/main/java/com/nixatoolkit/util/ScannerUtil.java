@@ -1,0 +1,169 @@
+package com.nixatoolkit.util;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
+/**
+ * Connects directly to a Windows scanner via WIA (Windows Image
+ * Acquisition) - the same technology the earlier pywin32 edition used - but
+ * through a small embedded PowerShell script instead of an in-process COM
+ * binding, since this build has no access to a Java-COM library (e.g. JACOB)
+ * from Maven Central. PowerShell ships with every Windows install, so this
+ * needs nothing extra on the CSC computer, same as before.
+ */
+public final class ScannerUtil {
+    private ScannerUtil() {
+    }
+
+    public static class ScannerException extends Exception {
+        public ScannerException(String message) {
+            super(message);
+        }
+    }
+
+    private static final String WIA_SCRIPT =
+            "param(\n" +
+            "  [string]$Mode = \"list\",\n" +
+            "  [string]$OutPath = \"\",\n" +
+            "  [string]$Intent = \"color\"\n" +
+            ")\n" +
+            "$ErrorActionPreference = 'Stop'\n" +
+            "if ($Mode -eq \"list\") {\n" +
+            "  try {\n" +
+            "    $mgr = New-Object -ComObject WIA.DeviceManager\n" +
+            "    foreach ($info in $mgr.DeviceInfos) {\n" +
+            "      if ($info.Type -eq 1) {\n" +
+            "        Write-Output $info.Properties(\"Name\").Value\n" +
+            "      }\n" +
+            "    }\n" +
+            "    exit 0\n" +
+            "  } catch {\n" +
+            "    exit 3\n" +
+            "  }\n" +
+            "}\n" +
+            "$intentMap = @{ \"color\" = 1; \"gray\" = 2; \"text\" = 4 }\n" +
+            "$intentVal = $intentMap[$Intent]\n" +
+            "if (-not $intentVal) { $intentVal = 1 }\n" +
+            "try {\n" +
+            "  $dialog = New-Object -ComObject WIA.CommonDialog\n" +
+            "} catch {\n" +
+            "  exit 3\n" +
+            "}\n" +
+            "try {\n" +
+            "  $image = $dialog.ShowAcquireImage(1, $intentVal, 65536, " +
+            "\"{B96B3CAE-0728-11D3-9D7B-0000F81EF32E}\", $false, $true)\n" +
+            "} catch {\n" +
+            "  Write-Error \"$_\"\n" +
+            "  exit 1\n" +
+            "}\n" +
+            "if ($null -eq $image) {\n" +
+            "  exit 2\n" +
+            "}\n" +
+            "$image.SaveFile($OutPath)\n" +
+            "exit 0\n";
+
+    private static Path writeScript() throws IOException {
+        Path script = Files.createTempFile("nixa_wia_", ".ps1");
+        Files.writeString(script, WIA_SCRIPT, StandardCharsets.UTF_8);
+        script.toFile().deleteOnExit();
+        return script;
+    }
+
+    /** Never throws - returns [] on any failure (no scanner, not Windows, PowerShell missing). */
+    public static List<String> listConnectedScanners() {
+        List<String> names = new ArrayList<>();
+        try {
+            Path script = writeScript();
+            Process p = new ProcessBuilder("powershell", "-NoProfile", "-ExecutionPolicy", "Bypass",
+                    "-File", script.toString(), "-Mode", "list")
+                    .redirectErrorStream(false)
+                    .start();
+            try (var reader = p.inputReader(StandardCharsets.UTF_8)) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (!line.isBlank()) names.add(line.trim());
+                }
+            }
+            p.waitFor(15, TimeUnit.SECONDS);
+            Files.deleteIfExists(script);
+        } catch (Exception ignored) {
+            return new ArrayList<>();
+        }
+        return names;
+    }
+
+    /** Returns null if the user cancelled the scan dialog. */
+    public static BufferedImage scan(String intent) throws ScannerException {
+        Path outFile;
+        Path script;
+        try {
+            script = writeScript();
+            outFile = Files.createTempFile("nixa_scan_", ".jpg");
+            Files.deleteIfExists(outFile); // WIA needs to create this file itself
+        } catch (IOException e) {
+            throw new ScannerException("Temp file உருவாக்க முடியல்: " + e.getMessage());
+        }
+
+        int exitCode;
+        String stderr;
+        try {
+            Process p = new ProcessBuilder("powershell", "-NoProfile", "-ExecutionPolicy", "Bypass",
+                    "-File", script.toString(), "-Mode", "scan", "-OutPath", outFile.toString(),
+                    "-Intent", intent)
+                    .redirectErrorStream(false)
+                    .start();
+            StringBuilder errBuf = new StringBuilder();
+            try (var reader = p.errorReader(StandardCharsets.UTF_8)) {
+                String line;
+                while ((line = reader.readLine()) != null) errBuf.append(line).append('\n');
+            }
+            boolean finished = p.waitFor(180, TimeUnit.SECONDS);
+            exitCode = finished ? p.exitValue() : -1;
+            stderr = errBuf.toString();
+        } catch (IOException e) {
+            throw new ScannerException(
+                    "Scanner support (PowerShell/WIA) இந்த computer-ல் இல்ல, அல்லது இது Windows இல்ல.\n"
+                            + "இது Windows-ல் மட்டும் வேலை செய்யும்.");
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new ScannerException("Scan interrupt ஆச்சு.");
+        } finally {
+            try { Files.deleteIfExists(script); } catch (IOException ignored) { }
+        }
+
+        if (exitCode == 2) {
+            return null; // user cancelled - not an error
+        }
+        if (exitCode == 3) {
+            throw new ScannerException(
+                    "WIA (Windows scanner driver layer) இந்த computer-ல் கிடைக்கல், அல்லது இது Windows இல்ல.");
+        }
+        if (exitCode != 0) {
+            String msg = stderr.isBlank() ? "" : (": " + stderr.trim());
+            if (stderr.toLowerCase().contains("no scanner") || stderr.contains("0x80210015")) {
+                throw new ScannerException(
+                        "எந்த Scanner-உம் கண்டுபிடிக்க முடியல்.\n"
+                                + "Scanner-ஐ USB-ல் connect பண்ணி, driver install ஆகிருக்கான்னு பாத்து மறுபடி முயற்சி செய்யவும்.");
+            }
+            throw new ScannerException("Scanner-ஐ இணைக்க முடியல்" + msg);
+        }
+
+        try {
+            BufferedImage img = ImageIO.read(outFile.toFile());
+            if (img == null) throw new IOException("Scan file readable இல்ல");
+            return img;
+        } catch (IOException e) {
+            throw new ScannerException("Scan செய்த file-ஐ படிக்க முடியல்: " + e.getMessage());
+        } finally {
+            try { Files.deleteIfExists(outFile); } catch (IOException ignored) { }
+        }
+    }
+}
