@@ -6,6 +6,9 @@ import java.awt.GraphicsEnvironment;
 import java.awt.Container;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.AbstractButton;
+import javax.swing.JComponent;
+import javax.swing.plaf.basic.BasicButtonUI;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -37,6 +40,8 @@ public final class Theme {
     public static final Color TEAL_HOVER = new Color(0x0A, 0x62, 0x59);
     public static final Color MARIGOLD = new Color(0xE0, 0x8E, 0x2C);
     public static final Color MARIGOLD_HOVER = new Color(0xC9, 0x74, 0x1C);
+    public static final Color BUTTON_ORANGE = new Color(0xF3, 0x91, 0x18);
+    public static final Color BUTTON_ORANGE_LIGHT = new Color(0xFF, 0xB2, 0x3B);
     public static final Color SUCCESS = new Color(0x1C, 0x7D, 0x4D);
     public static final Color SUCCESS_BG = new Color(0xE0, 0xF2, 0xE6);
     public static final Color WARN = new Color(0xA3, 0x62, 0x0B);
@@ -89,18 +94,48 @@ public final class Theme {
     private static void styleButton(JButton button) {
         String text = button.getText() == null ? "" : button.getText().toLowerCase();
         boolean danger = text.contains("delete") || text.contains("remove") || text.contains("clear");
-        boolean primary = text.contains("save") || text.contains("compress") || text.contains("convert")
-                || text.contains("resize") || text.contains("scan") || text.contains("choose");
         button.setFont(uiFont(Font.PLAIN, 13));
         button.setFocusPainted(false);
-        button.setOpaque(true);
-        button.setContentAreaFilled(true);
+        button.setOpaque(false);
+        button.setContentAreaFilled(false);
         button.setRolloverEnabled(true);
-        button.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(danger ? DANGER : (primary ? TEAL : LINE), 1),
-                BorderFactory.createEmptyBorder(7, 12, 7, 12)));
+        button.setBorder(BorderFactory.createEmptyBorder(8, 18, 8, 18));
         button.setMargin(new java.awt.Insets(0, 0, 0, 0));
-        button.setBackground(danger ? DANGER_BG : (primary ? TEAL : SURFACE));
-        button.setForeground(danger ? DANGER : (primary ? Color.WHITE : INK));
+        button.setBackground(danger ? DANGER : BUTTON_ORANGE);
+        button.setForeground(danger ? Color.WHITE : new Color(0x20, 0x18, 0x0C));
+        button.setUI(new GlassButtonUI());
+    }
+
+    private static final class GlassButtonUI extends BasicButtonUI {
+        @Override
+        public void paint(java.awt.Graphics graphics, JComponent component) {
+            AbstractButton button = (AbstractButton) component;
+            java.awt.Graphics2D g = (java.awt.Graphics2D) graphics.create();
+            g.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING,
+                    java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+            int width = button.getWidth();
+            int height = button.getHeight();
+            int radius = Math.max(16, height - 4);
+            boolean danger = button.getText() != null
+                    && (button.getText().toLowerCase().contains("delete")
+                    || button.getText().toLowerCase().contains("remove")
+                    || button.getText().toLowerCase().contains("clear"));
+            Color base = danger ? new Color(0xD9, 0x4A, 0x3A) : BUTTON_ORANGE;
+            Color highlight = danger ? new Color(0xF1, 0x76, 0x66) : BUTTON_ORANGE_LIGHT;
+            if (!button.isEnabled()) {
+                base = new Color(0xB8, 0xB8, 0xB8);
+                highlight = new Color(0xD8, 0xD8, 0xD8);
+            } else if (button.getModel().isRollover()) {
+                base = highlight;
+            }
+            g.setColor(new Color(0, 0, 0, 45));
+            g.fillRoundRect(2, 3, Math.max(0, width - 3), Math.max(0, height - 2), radius, radius);
+            g.setPaint(new java.awt.GradientPaint(0, 0, highlight, 0, height, base));
+            g.fillRoundRect(0, 0, Math.max(0, width - 4), Math.max(0, height - 4), radius, radius);
+            g.setColor(new Color(255, 255, 255, 105));
+            g.drawRoundRect(1, 1, Math.max(0, width - 6), Math.max(0, height / 2), radius, radius);
+            g.dispose();
+            super.paint(graphics, component);
+        }
     }
 }
