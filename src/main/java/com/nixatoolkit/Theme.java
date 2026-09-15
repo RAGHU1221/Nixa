@@ -86,6 +86,7 @@ public final class Theme {
 
     /** Applies the compact outlined/primary button language used across the app. */
     public static void styleButtons(Container root) {
+        if (root instanceof JComboBox) return;
         for (java.awt.Component component : root.getComponents()) {
             if (component instanceof JButton) {
                 styleButton((JButton) component);
@@ -97,6 +98,7 @@ public final class Theme {
     }
 
     public static void styleGreenButtons(Container root) {
+        if (root instanceof JComboBox) return;
         for (java.awt.Component component : root.getComponents()) {
             if (component instanceof JButton) {
                 ((JButton) component).putClientProperty("buttonTone", "cyan");
