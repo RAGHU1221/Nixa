@@ -32,13 +32,13 @@ public class CompressPanel extends JPanel implements ToolPanel {
     private final JTextField targetEntry = new JTextField("100", 6);
         private final JComboBox<String> qualityMenu = new JComboBox<>(
             new String[]{"Best quality", "Balanced", "Smallest file"});
-    private final JButton compressBtn = new JButton("⚙ Compress");
+    private final JButton compressBtn = new JButton("Compress");
     private final JLabel pdfNote = new JLabel();
     private final JLabel beforeLabel = new JLabel(" ");
     private final JLabel afterLabel = new JLabel(" ");
     private final JLabel beforeImgLabel = new JLabel();
     private final JLabel afterImgLabel = new JLabel();
-    private final JButton saveBtn = new JButton("⬇ Save Result");
+    private final JButton saveBtn = new JButton("Save Result");
 
     public CompressPanel(App app) {
         this.app = app;
@@ -66,7 +66,7 @@ public class CompressPanel extends JPanel implements ToolPanel {
         qualityMenu.setFont(Theme.uiFont(12));
         qualityMenu.setPreferredSize(new Dimension(135, 30));
         controls.add(qualityMenu);
-        JButton chooseBtn = new JButton("📁 Choose Photo or PDF");
+        JButton chooseBtn = new JButton("Choose Photo or PDF");
         chooseBtn.setFont(Theme.uiFont(13));
         chooseBtn.addActionListener(e -> onChoose());
         controls.add(chooseBtn);

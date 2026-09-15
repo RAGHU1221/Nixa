@@ -24,8 +24,8 @@ public class ScanPanel extends JPanel implements ToolPanel {
     private final List<BufferedImage> pages = new ArrayList<>();
     private final JPanel listPanel = new JPanel();
     private final JLabel countLabel = new JLabel();
-    private final JButton saveImageBtn = new JButton("💾 Save Image");
-    private final JButton savePdfBtn = new JButton("📄 Save PDF");
+    private final JButton saveImageBtn = new JButton("Save Image");
+    private final JButton savePdfBtn = new JButton("Save PDF");
     private final JLabel statusLine = new JLabel("Scanner status: checking...");
     private final JCheckBox bwCheck = new JCheckBox("B&W scan effect");
     private final JComboBox<String> intentMenu =
@@ -70,11 +70,11 @@ public class ScanPanel extends JPanel implements ToolPanel {
         scannerMenu.setFont(Theme.uiFont(12));
         scannerMenu.setPreferredSize(new Dimension(190, 28));
         controls.add(scannerMenu);
-        JButton scanBtn = new JButton("🖨️ Scan from Scanner");
+        JButton scanBtn = new JButton("Scan from Scanner");
         scanBtn.setFont(Theme.uiFont(13));
         scanBtn.addActionListener(e -> onScanClicked());
         controls.add(scanBtn);
-        JButton addFileBtn = new JButton("📁 Add Image File");
+        JButton addFileBtn = new JButton("Add Image File");
         addFileBtn.setFont(Theme.uiFont(13));
         addFileBtn.addActionListener(e -> onAddFileClicked());
         controls.add(addFileBtn);

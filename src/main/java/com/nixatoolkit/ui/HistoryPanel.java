@@ -53,7 +53,7 @@ public class HistoryPanel extends JPanel implements ToolPanel {
         topRow.setAlignmentX(Component.LEFT_ALIGNMENT);
         topRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 34));
         countLabel.setFont(Theme.uiFont(Font.BOLD, 13));
-        JButton clearBtn = new JButton("🗑 Clear History");
+        JButton clearBtn = new JButton("Clear History");
         clearBtn.setFont(Theme.uiFont(12));
         clearBtn.setFocusPainted(false);
         clearBtn.addActionListener(e -> onClear());

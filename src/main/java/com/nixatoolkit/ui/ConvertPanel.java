@@ -22,7 +22,7 @@ public class ConvertPanel extends JPanel implements ToolPanel {
     private final JLabel countLabel = new JLabel("Files (0)");
     private final JComboBox<String> formatMenu = new JComboBox<>(new String[]{"JPEG", "PNG"});
     private final JSlider qualitySlider = new JSlider(10, 100, 85);
-    private final JButton convertBtn = new JButton("⚙ Convert All → Save to Folder");
+    private final JButton convertBtn = new JButton("Convert All → Save to Folder");
 
     public ConvertPanel(App app) {
         this.app = app;

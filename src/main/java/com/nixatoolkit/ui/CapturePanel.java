@@ -25,7 +25,7 @@ public class CapturePanel extends JPanel implements ToolPanel {
     private final App app;
     private BufferedImage photo;
     private final JLabel previewLabel = new JLabel("ஒரு photo pick பண்ணுங்க...", SwingConstants.CENTER);
-    private final JButton saveBtn = new JButton("⬇ Save Photo");
+    private final JButton saveBtn = new JButton("Save Photo");
 
     public CapturePanel(App app) {
         this.app = app;
@@ -66,7 +66,7 @@ public class CapturePanel extends JPanel implements ToolPanel {
         JPanel btnRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         btnRow.setOpaque(false);
         btnRow.setAlignmentX(Component.LEFT_ALIGNMENT);
-        JButton pickBtn = new JButton("📷 Pick Photo");
+        JButton pickBtn = new JButton("Pick Photo");
         pickBtn.setFont(Theme.uiFont(13));
         pickBtn.addActionListener(e -> onPick());
         saveBtn.setFont(Theme.uiFont(13));

@@ -37,13 +37,13 @@ public class App extends JFrame {
     private Map<String, Object> settings;
 
     private static final String[][] NAV_ITEMS = {
-            {"home", "🏠", "முகப்பு / Home"},
-            {"scan", "🖨️", "Scan → PDF"},
-            {"convert", "🖼️", "Image Converter"},
-            {"compress", "📉", "Reduce File Size"},
-            {"resize", "📐", "Form Photo / Signature"},
-            {"capture", "📷", "Photo Import"},
-            {"history", "🕒", "Activity History"},
+            {"home", "", "முகப்பு / Home"},
+            {"scan", "", "Scan → PDF"},
+            {"convert", "", "Image Converter"},
+            {"compress", "", "Reduce File Size"},
+            {"resize", "", "Form Photo / Signature"},
+            {"capture", "", "Photo Import"},
+            {"history", "", "Activity History"},
     };
 
     public App() {
@@ -58,6 +58,8 @@ public class App extends JFrame {
         buildMenuBar();
 
         JPanel sidebar = buildSidebar();
+        Theme.styleButtons(sidebar);
+        styleNavigationButtons();
         add(sidebar, BorderLayout.WEST);
 
         content.setBorder(BorderFactory.createEmptyBorder(18, 18, 0, 18));
@@ -130,7 +132,7 @@ public class App extends JFrame {
 
         JMenu toolsMenu = new JMenu("Tools");
         for (String[] item : NAV_ITEMS) {
-            JMenuItem mi = new JMenuItem(item[1] + "  " + item[2]);
+            JMenuItem mi = new JMenuItem(item[2]);
             mi.addActionListener(e -> showPanel(item[0]));
             toolsMenu.add(mi);
         }
@@ -169,7 +171,7 @@ public class App extends JFrame {
         brand.setLayout(new BoxLayout(brand, BoxLayout.Y_AXIS));
         brand.setBorder(BorderFactory.createEmptyBorder(22, 18, 18, 18));
         brand.setAlignmentX(Component.LEFT_ALIGNMENT);
-        JLabel brandIcon = new JLabel("🧰 Nixa Toolkit");
+        JLabel brandIcon = new JLabel("Nixa Toolkit");
         brandIcon.setFont(Theme.uiFont(Font.BOLD, 16));
         brandIcon.setAlignmentX(Component.LEFT_ALIGNMENT);
         JLabel brandSub = new JLabel("CSC Desktop (Java) · v" + APP_VERSION);
@@ -183,15 +185,12 @@ public class App extends JFrame {
 
         for (String[] item : NAV_ITEMS) {
             String key = item[0];
-            JButton btn = new JButton("  " + item[1] + "  " + item[2]);
+            JButton btn = new JButton(item[2]);
             btn.setHorizontalAlignment(SwingConstants.LEFT);
             btn.setFont(Theme.uiFont(13));
             btn.setFocusPainted(false);
-            btn.setBorderPainted(false);
-            btn.setContentAreaFilled(true);
-            btn.setOpaque(true);
             btn.setBackground(Theme.SURFACE);
-            btn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 42));
+            btn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 44));
             btn.setAlignmentX(Component.LEFT_ALIGNMENT);
             btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             btn.addActionListener(e -> showPanel(key));
@@ -212,12 +211,23 @@ public class App extends JFrame {
 
     public void showPanel(String key) {
         for (Map.Entry<String, JButton> e : navButtons.entrySet()) {
-            e.getValue().setBackground(e.getKey().equals(key) ? Theme.SURFACE_2 : Theme.SURFACE);
+            boolean active = e.getKey().equals(key);
+            e.getValue().setBackground(active ? Theme.TEAL : Theme.SURFACE);
+            e.getValue().setForeground(active ? Color.WHITE : Theme.INK);
         }
         cardLayout.show(content, key);
         JComponent panel = panels.get(key);
         if (panel instanceof ToolPanel) {
             ((ToolPanel) panel).onShow();
+        }
+    }
+
+    private void styleNavigationButtons() {
+        for (JButton button : navButtons.values()) {
+            button.setBorder(BorderFactory.createEmptyBorder(9, 16, 9, 16));
+            button.setFont(Theme.uiFont(Font.PLAIN, 13));
+            button.setForeground(Theme.INK);
+            button.setBackground(Theme.SURFACE);
         }
     }
 

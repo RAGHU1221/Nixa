@@ -43,7 +43,7 @@ public class ResizePanel extends JPanel implements ToolPanel {
     private final JCheckBox borderCheck = new JCheckBox("Add border");
     private final JComboBox<String> borderColorMenu = new JComboBox<>(new String[]{"Black", "White"});
     private final JTextField borderWidthEntry = new JTextField("2", 3);
-    private final JButton runBtn = new JButton("⚙ Resize + Compress");
+    private final JButton runBtn = new JButton("Resize + Compress");
     private final JButton cropBtn = new JButton("Crop Image");
     private final JButton scanBtn = new JButton("Scan Photo");
     private final JButton clearBtn = new JButton("Clear Image");
@@ -51,7 +51,7 @@ public class ResizePanel extends JPanel implements ToolPanel {
     private final JLabel afterLabel = new JLabel(" ");
     private final JLabel beforeImgLabel = new JLabel();
     private final JLabel afterImgLabel = new JLabel();
-    private final JButton saveBtn = new JButton("⬇ Save Result");
+    private final JButton saveBtn = new JButton("Save Result");
 
     public ResizePanel(App app) {
         this.app = app;
