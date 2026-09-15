@@ -45,12 +45,18 @@ public class PdfToolsPanel extends JPanel implements ToolPanel {
         JPanel tools = new JPanel(new GridLayout(0, 3, 12, 12));
         tools.setOpaque(false);
         tools.setAlignmentX(Component.LEFT_ALIGNMENT);
-        tools.add(toolCard("Images to PDF", "Combine photos into one PDF document.", "Create PDF", this::imagesToPdf));
-        tools.add(toolCard("Merge PDFs", "Combine scanned PDF files in the selected order.", "Merge Files", this::mergePdfs));
-        tools.add(toolCard("Extract PDF Pages", "Export scanned pages as JPG images.", "Extract Pages", this::extractPages));
-        tools.add(toolCard("PDF to JPG", "Export every scanned PDF page as an image.", "Convert Pages", this::extractPages));
-        tools.add(toolCard("Split PDF", "Create one PDF file for every scanned page.", "Split PDF", this::splitPdf));
-        tools.add(toolCard("PDF Info", "Check page count and image-page support.", "Check PDF", this::showPdfInfo));
+        tools.add(toolCard("Images to PDF", "Combine photos into one PDF document.", "Create PDF",
+            () -> openOperation(PdfOperationDialog.Operation.IMAGES_TO_PDF)));
+        tools.add(toolCard("Merge PDFs", "Combine scanned PDF files in the selected order.", "Merge Files",
+            () -> openOperation(PdfOperationDialog.Operation.MERGE_PDFS)));
+        tools.add(toolCard("Extract PDF Pages", "Export scanned pages as JPG images.", "Extract Pages",
+            () -> openOperation(PdfOperationDialog.Operation.EXTRACT_PAGES)));
+        tools.add(toolCard("PDF to JPG", "Export every scanned PDF page as an image.", "Convert Pages",
+            () -> openOperation(PdfOperationDialog.Operation.EXTRACT_PAGES)));
+        tools.add(toolCard("Split PDF", "Create one PDF file for every scanned page.", "Split PDF",
+            () -> openOperation(PdfOperationDialog.Operation.SPLIT_PDF)));
+        tools.add(toolCard("PDF Info", "Check page count and image-page support.", "Check PDF",
+            () -> openOperation(PdfOperationDialog.Operation.PDF_INFO)));
         tools.add(toolCard("Scan to PDF", "Capture pages directly from your scanner.", "Open Scanner", () -> app.showPanel("scan")));
         tools.add(toolCard("Compress PDF", "Reduce scanned PDF size with quality control.", "Open Compressor", () -> app.showPanel("compress")));
         top.add(tools);
@@ -70,6 +76,11 @@ public class PdfToolsPanel extends JPanel implements ToolPanel {
         scroll.setOpaque(false);
         scroll.getViewport().setOpaque(false);
         add(scroll, BorderLayout.CENTER);
+    }
+
+    private void openOperation(PdfOperationDialog.Operation operation) {
+        PdfOperationDialog dialog = new PdfOperationDialog(app, operation);
+        dialog.setVisible(true);
     }
 
     private JPanel toolCard(String title, String description, String action, Runnable handler) {
