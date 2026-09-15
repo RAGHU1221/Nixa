@@ -3,6 +3,9 @@ package com.nixatoolkit;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.GraphicsEnvironment;
+import java.awt.Container;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -69,5 +72,34 @@ public final class Theme {
 
     public static Font uiFont(int size) {
         return uiFont(Font.PLAIN, size);
+    }
+
+    /** Applies the compact outlined/primary button language used across the app. */
+    public static void styleButtons(Container root) {
+        for (java.awt.Component component : root.getComponents()) {
+            if (component instanceof JButton) {
+                styleButton((JButton) component);
+            }
+            if (component instanceof Container) {
+                styleButtons((Container) component);
+            }
+        }
+    }
+
+    private static void styleButton(JButton button) {
+        String text = button.getText() == null ? "" : button.getText().toLowerCase();
+        boolean danger = text.contains("delete") || text.contains("remove") || text.contains("clear");
+        boolean primary = text.contains("save") || text.contains("compress") || text.contains("convert")
+                || text.contains("resize") || text.contains("scan") || text.contains("choose");
+        button.setFont(uiFont(Font.PLAIN, 13));
+        button.setFocusPainted(false);
+        button.setOpaque(true);
+        button.setContentAreaFilled(true);
+        button.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(danger ? DANGER : (primary ? TEAL : LINE), 1),
+                BorderFactory.createEmptyBorder(7, 12, 7, 12)));
+        button.setMargin(new java.awt.Insets(0, 0, 0, 0));
+        button.setBackground(danger ? DANGER_BG : (primary ? TEAL : SURFACE));
+        button.setForeground(danger ? DANGER : (primary ? Color.WHITE : INK));
     }
 }

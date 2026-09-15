@@ -78,6 +78,7 @@ public class App extends JFrame {
         registerPanel("capture", new CapturePanel(this));
         registerPanel("history", new HistoryPanel(this));
 
+        Theme.styleButtons(content);
         showPanel("home");
 
         addWindowListener(new WindowAdapter() {
