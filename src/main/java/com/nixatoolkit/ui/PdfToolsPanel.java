@@ -46,7 +46,10 @@ public class PdfToolsPanel extends JPanel implements ToolPanel {
         tools.setOpaque(false);
         tools.setAlignmentX(Component.LEFT_ALIGNMENT);
         tools.add(toolCard("Images to PDF", "Combine photos into one PDF document.", "Create PDF", this::imagesToPdf));
+        tools.add(toolCard("JPG to PDF", "Turn one or more images into a PDF.", "Convert Images", this::imagesToPdf));
+        tools.add(toolCard("Merge PDFs", "Combine scanned PDF files in the selected order.", "Merge Files", this::mergePdfs));
         tools.add(toolCard("Extract PDF Pages", "Export scanned pages as JPG images.", "Extract Pages", this::extractPages));
+        tools.add(toolCard("PDF to JPG", "Export every scanned PDF page as an image.", "Convert Pages", this::extractPages));
         tools.add(toolCard("Split PDF", "Create one PDF file for every scanned page.", "Split PDF", this::splitPdf));
         tools.add(toolCard("PDF Info", "Check page count and image-page support.", "Check PDF", this::showPdfInfo));
         tools.add(toolCard("Scan to PDF", "Capture pages directly from your scanner.", "Open Scanner", () -> app.showPanel("scan")));
@@ -145,6 +148,36 @@ public class PdfToolsPanel extends JPanel implements ToolPanel {
             done("Extracted " + pages.size() + " page(s) to " + folder.getName() + ".");
         } catch (Exception e) {
             fail("Extract pages failed: " + e.getMessage());
+        }
+    }
+
+    private void mergePdfs() {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setMultiSelectionEnabled(true);
+        chooser.setFileFilter(new FileNameExtensionFilter("PDF", "pdf"));
+        if (chooser.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) return;
+        File[] files = chooser.getSelectedFiles();
+        List<byte[]> pages = new ArrayList<>();
+        List<int[]> sizes = new ArrayList<>();
+        try {
+            for (File file : files) {
+                for (byte[] jpeg : PdfUtil.extractJpegPages(file.toPath())) {
+                    BufferedImage image = PdfUtil.decodeJpeg(jpeg);
+                    pages.add(jpeg);
+                    sizes.add(new int[]{image.getWidth(), image.getHeight()});
+                }
+            }
+            if (pages.isEmpty()) throw new IOException("No scanned image pages found.");
+            JFileChooser save = new JFileChooser();
+            save.setFileFilter(new FileNameExtensionFilter("PDF", "pdf"));
+            save.setSelectedFile(new File("merged.pdf"));
+            if (save.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return;
+            File output = ensureExtension(save.getSelectedFile(), ".pdf");
+            Files.write(output.toPath(), PdfUtil.buildFromJpegPages(pages, sizes, 200.0));
+            HistoryStore.logAction("pdf", files.length + " PDF(s) -> " + output.getName());
+            done("Merged " + files.length + " PDF file(s) into " + output.getName() + ".");
+        } catch (Exception e) {
+            fail("Merge PDFs failed: " + e.getMessage());
         }
     }
 
