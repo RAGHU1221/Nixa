@@ -24,11 +24,14 @@ public class ScanPanel extends JPanel implements ToolPanel {
     private final List<BufferedImage> pages = new ArrayList<>();
     private final JPanel listPanel = new JPanel();
     private final JLabel countLabel = new JLabel();
-    private final JButton genBtn = new JButton("📄 Generate PDF");
+    private final JButton saveImageBtn = new JButton("💾 Save Image");
+    private final JButton savePdfBtn = new JButton("📄 Save PDF");
     private final JLabel statusLine = new JLabel("Scanner status: checking...");
     private final JCheckBox bwCheck = new JCheckBox("B&W scan effect");
     private final JComboBox<String> intentMenu =
             new JComboBox<>(new String[]{"Color", "Grayscale", "Text / B&W document"});
+    private final JComboBox<String> scannerMenu = new JComboBox<>();
+    private final JComboBox<Integer> dpiMenu = new JComboBox<>(new Integer[]{75, 150, 200, 300, 600});
 
     public ScanPanel(App app) {
         this.app = app;
@@ -58,6 +61,15 @@ public class ScanPanel extends JPanel implements ToolPanel {
         controls.add(bwCheck);
         intentMenu.setFont(Theme.uiFont(12));
         controls.add(intentMenu);
+        controls.add(new JLabel("DPI:"));
+        dpiMenu.setSelectedItem(300);
+        dpiMenu.setFont(Theme.uiFont(12));
+        controls.add(dpiMenu);
+        controls.add(new JLabel("Scanner:"));
+        scannerMenu.addItem("Auto / Default scanner");
+        scannerMenu.setFont(Theme.uiFont(12));
+        scannerMenu.setPreferredSize(new Dimension(190, 28));
+        controls.add(scannerMenu);
         JButton scanBtn = new JButton("🖨️ Scan from Scanner");
         scanBtn.setFont(Theme.uiFont(13));
         scanBtn.addActionListener(e -> onScanClicked());
@@ -74,11 +86,18 @@ public class ScanPanel extends JPanel implements ToolPanel {
         listTop.setAlignmentX(Component.LEFT_ALIGNMENT);
         listTop.setMaximumSize(new Dimension(Integer.MAX_VALUE, 34));
         countLabel.setFont(Theme.uiFont(Font.BOLD, 13));
-        genBtn.setFont(Theme.uiFont(13));
-        genBtn.setEnabled(false);
-        genBtn.addActionListener(e -> onGeneratePdf());
+        saveImageBtn.setFont(Theme.uiFont(13));
+        saveImageBtn.setEnabled(false);
+        saveImageBtn.addActionListener(e -> onSaveImage());
+        savePdfBtn.setFont(Theme.uiFont(13));
+        savePdfBtn.setEnabled(false);
+        savePdfBtn.addActionListener(e -> onGeneratePdf());
         listTop.add(countLabel, BorderLayout.WEST);
-        listTop.add(genBtn, BorderLayout.EAST);
+        JPanel saveButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
+        saveButtons.setOpaque(false);
+        saveButtons.add(saveImageBtn);
+        saveButtons.add(savePdfBtn);
+        listTop.add(saveButtons, BorderLayout.EAST);
         top.add(listTop);
         top.add(Box.createVerticalStrut(6));
 
@@ -119,6 +138,11 @@ public class ScanPanel extends JPanel implements ToolPanel {
                         statusLine.setText("⚪ எந்த Scanner-உம் இப்போ கண்டுபிடிக்கப்படல் (அல்லது இது Windows இல்ல) "
                                 + "— 'Scan from Scanner' அழுத்தி மறுபடி முயற்சி செய்யலாம்.");
                     }
+                    String selected = (String) scannerMenu.getSelectedItem();
+                    scannerMenu.removeAllItems();
+                    scannerMenu.addItem("Auto / Default scanner");
+                    for (String name : names) scannerMenu.addItem(name);
+                    if (selected != null) scannerMenu.setSelectedItem(selected);
                 } catch (Exception ignored) {
                 }
             }
@@ -134,6 +158,16 @@ public class ScanPanel extends JPanel implements ToolPanel {
         return "color";
     }
 
+    private int selectedDpi() {
+        Integer dpi = (Integer) dpiMenu.getSelectedItem();
+        return dpi == null ? 300 : dpi;
+    }
+
+    private String selectedScanner() {
+        String scanner = (String) scannerMenu.getSelectedItem();
+        return scanner == null || scanner.startsWith("Auto") ? "" : scanner;
+    }
+
     private void onScanClicked() {
         app.flash("Scanner-ஐ இணைக்கிறோம்... (Windows scan dialog திறக்கும்)", StatusBar.Kind.INFO);
         String intent = currentIntent();
@@ -144,7 +178,7 @@ public class ScanPanel extends JPanel implements ToolPanel {
             @Override
             protected BufferedImage doInBackground() {
                 try {
-                    return ScannerUtil.scan(intent);
+                    return ScannerUtil.scan(intent, selectedDpi(), selectedScanner());
                 } catch (ScannerUtil.ScannerException e) {
                     scanError = e;
                     return null;
@@ -207,10 +241,12 @@ public class ScanPanel extends JPanel implements ToolPanel {
             empty.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
             listPanel.add(empty);
             countLabel.setText("பக்கங்கள் · Pages (0)");
-            genBtn.setEnabled(false);
+            saveImageBtn.setEnabled(false);
+            savePdfBtn.setEnabled(false);
         } else {
             countLabel.setText("பக்கங்கள் · Pages (" + pages.size() + ")");
-            genBtn.setEnabled(true);
+            saveImageBtn.setEnabled(true);
+            savePdfBtn.setEnabled(true);
             for (int i = 0; i < pages.size(); i++) {
                 listPanel.add(pageRow(i));
                 listPanel.add(Box.createVerticalStrut(4));
@@ -226,10 +262,19 @@ public class ScanPanel extends JPanel implements ToolPanel {
         row.setBackground(Theme.SURFACE);
         row.setBorder(BorderFactory.createEmptyBorder(6, 10, 6, 10));
         row.setAlignmentX(Component.LEFT_ALIGNMENT);
-        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 88));
+        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 210));
 
-        Image thumb = img.getScaledInstance(70, -1, Image.SCALE_SMOOTH);
+        int previewWidth = 220;
+        int previewHeight = 175;
+        double scale = Math.min((double) previewWidth / img.getWidth(),
+            (double) previewHeight / img.getHeight());
+        int scaledWidth = Math.max(1, (int) Math.round(img.getWidth() * scale));
+        int scaledHeight = Math.max(1, (int) Math.round(img.getHeight() * scale));
+        Image thumb = img.getScaledInstance(scaledWidth, scaledHeight, Image.SCALE_SMOOTH);
         JLabel thumbLabel = new JLabel(new ImageIcon(thumb));
+        thumbLabel.setPreferredSize(new Dimension(previewWidth, previewHeight));
+        thumbLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        thumbLabel.setVerticalAlignment(SwingConstants.CENTER);
         row.add(thumbLabel, BorderLayout.WEST);
 
         JPanel textBox = new JPanel();
@@ -288,6 +333,27 @@ public class ScanPanel extends JPanel implements ToolPanel {
             out = new File(out.getParentFile(), out.getName() + ".pdf");
         }
         generatePdfToFile(out);
+    }
+
+    private void onSaveImage() {
+        if (pages.isEmpty()) return;
+        JFileChooser chooser = new JFileChooser();
+        chooser.setFileFilter(new FileNameExtensionFilter("JPEG image", "jpg", "jpeg"));
+        chooser.setSelectedFile(new File("scan-"
+                + java.time.LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss")) + ".jpg"));
+        int result = chooser.showSaveDialog(this);
+        if (result != JFileChooser.APPROVE_OPTION) return;
+        File out = chooser.getSelectedFile();
+        if (!out.getName().toLowerCase().endsWith(".jpg") && !out.getName().toLowerCase().endsWith(".jpeg")) {
+            out = new File(out.getParentFile(), out.getName() + ".jpg");
+        }
+        try {
+            ImageIO.write(ImageUtil.toRgb(pages.get(0)), "jpg", out);
+            HistoryStore.logAction("scan", "page 1 -> " + out.getName());
+            app.flash("✓ Image saved: " + out.getName(), StatusBar.Kind.OK);
+        } catch (IOException e) {
+            app.flash("Image save தோல்வி: " + e.getMessage(), StatusBar.Kind.ERR);
+        }
     }
 
     /** Package-visible so tests can exercise the save logic without a real file dialog. */

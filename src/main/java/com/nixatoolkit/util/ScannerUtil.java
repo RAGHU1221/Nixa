@@ -33,7 +33,9 @@ public final class ScannerUtil {
             "param(\n" +
             "  [string]$Mode = \"list\",\n" +
             "  [string]$OutPath = \"\",\n" +
-            "  [string]$Intent = \"color\"\n" +
+            "  [string]$Intent = \"color\",\n" +
+            "  [int]$Dpi = 300,\n" +
+            "  [string]$DeviceName = \"\"\n" +
             ")\n" +
             "$ErrorActionPreference = 'Stop'\n" +
             "if ($Mode -eq \"list\") {\n" +
@@ -49,6 +51,22 @@ public final class ScannerUtil {
             "    exit 3\n" +
             "  }\n" +
             "}\n" +
+            "try {\n" +
+            "  $mgr = New-Object -ComObject WIA.DeviceManager\n" +
+            "  $info = $null\n" +
+            "  foreach ($candidate in $mgr.DeviceInfos) {\n" +
+            "    if ($candidate.Type -eq 1 -and ($DeviceName -eq \"\" -or $candidate.Properties(\"Name\").Value -eq $DeviceName)) { $info = $candidate; break }\n" +
+            "  }\n" +
+            "  if ($null -eq $info) { exit 4 }\n" +
+            "  $device = $info.Connect()\n" +
+            "  $item = $device.Items.Item(1)\n" +
+            "  foreach ($property in $item.Properties) {\n" +
+            "    if ($property.PropertyID -eq 6147 -or $property.PropertyID -eq 6148) { $property.Value = $Dpi }\n" +
+            "  }\n" +
+            "} catch {\n" +
+            "  Write-Error \"Scanner setup failed: $_\"\n" +
+            "  exit 3\n" +
+            "}\n" +
             "$intentMap = @{ \"color\" = 1; \"gray\" = 2; \"text\" = 4 }\n" +
             "$intentVal = $intentMap[$Intent]\n" +
             "if (-not $intentVal) { $intentVal = 1 }\n" +
@@ -58,8 +76,8 @@ public final class ScannerUtil {
             "  exit 3\n" +
             "}\n" +
             "try {\n" +
-            "  $image = $dialog.ShowAcquireImage(1, $intentVal, 65536, " +
-            "\"{B96B3CAE-0728-11D3-9D7B-0000F81EF32E}\", $false, $true)\n" +
+            "  $image = $dialog.ShowTransfer($item, " +
+            "\"{B96B3CAE-0728-11D3-9D7B-0000F81EF32E}\", $false)\n" +
             "} catch {\n" +
             "  Write-Error \"$_\"\n" +
             "  exit 1\n" +
@@ -102,6 +120,11 @@ public final class ScannerUtil {
 
     /** Returns null if the user cancelled the scan dialog. */
     public static BufferedImage scan(String intent) throws ScannerException {
+        return scan(intent, 300, "");
+    }
+
+    /** Scans from the selected WIA device at the requested resolution. */
+    public static BufferedImage scan(String intent, int dpi, String deviceName) throws ScannerException {
         Path outFile;
         Path script;
         try {
@@ -117,7 +140,8 @@ public final class ScannerUtil {
         try {
             Process p = new ProcessBuilder("powershell", "-NoProfile", "-ExecutionPolicy", "Bypass",
                     "-File", script.toString(), "-Mode", "scan", "-OutPath", outFile.toString(),
-                    "-Intent", intent)
+                    "-Intent", intent, "-Dpi", String.valueOf(dpi),
+                    "-DeviceName", deviceName == null ? "" : deviceName)
                     .redirectErrorStream(false)
                     .start();
             StringBuilder errBuf = new StringBuilder();
@@ -145,6 +169,9 @@ public final class ScannerUtil {
         if (exitCode == 3) {
             throw new ScannerException(
                     "WIA (Windows scanner driver layer) இந்த computer-ல் கிடைக்கல், அல்லது இது Windows இல்ல.");
+        }
+        if (exitCode == 4) {
+            throw new ScannerException("தேர்ந்தெடுத்த Scanner கிடைக்கவில்லை. Scanner list-ஐ refresh செய்து மறுபடி முயற்சி செய்யவும்.");
         }
         if (exitCode != 0) {
             String msg = stderr.isBlank() ? "" : (": " + stderr.trim());
