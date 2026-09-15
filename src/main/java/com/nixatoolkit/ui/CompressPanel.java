@@ -70,6 +70,10 @@ public class CompressPanel extends JPanel implements ToolPanel {
         chooseBtn.setFont(Theme.uiFont(13));
         chooseBtn.addActionListener(e -> onChoose());
         controls.add(chooseBtn);
+        JButton clearBtn = new JButton("Clear");
+        clearBtn.setFont(Theme.uiFont(13));
+        clearBtn.addActionListener(e -> clearSelection());
+        controls.add(clearBtn);
         compressBtn.setFont(Theme.uiFont(13));
         compressBtn.setEnabled(false);
         compressBtn.addActionListener(e -> onCompress());
@@ -128,6 +132,25 @@ public class CompressPanel extends JPanel implements ToolPanel {
         scroll.setOpaque(false);
         scroll.getViewport().setOpaque(false);
         add(scroll, BorderLayout.CENTER);
+    }
+
+    private void clearSelection() {
+        srcImg = null;
+        srcPath = null;
+        isPdf = false;
+        resultData = null;
+        resultW = 0;
+        resultH = 0;
+        resultPages = 0;
+        resultOverLimit = false;
+        pdfNote.setVisible(false);
+        beforeLabel.setText(" ");
+        afterLabel.setText(" ");
+        beforeImgLabel.setIcon(null);
+        afterImgLabel.setIcon(null);
+        compressBtn.setEnabled(false);
+        saveBtn.setEnabled(false);
+        app.flash("Selected file clear செய்யப்பட்டது.", StatusBar.Kind.OK);
     }
 
     private void onChoose() {
