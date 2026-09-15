@@ -14,6 +14,8 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -272,37 +274,98 @@ public class ResizePanel extends JPanel implements ToolPanel {
 
     private void onCrop() {
         if (srcImg == null) return;
-        JTextField xField = new JTextField("0");
-        JTextField yField = new JTextField("0");
-        JTextField widthField = new JTextField(String.valueOf(srcImg.getWidth()));
-        JTextField heightField = new JTextField(String.valueOf(srcImg.getHeight()));
-        JPanel form = new JPanel(new GridLayout(4, 2, 8, 8));
-        form.add(new JLabel("Left (x):")); form.add(xField);
-        form.add(new JLabel("Top (y):")); form.add(yField);
-        form.add(new JLabel("Width:")); form.add(widthField);
-        form.add(new JLabel("Height:")); form.add(heightField);
-        int result = JOptionPane.showConfirmDialog(this, form, "Crop photo", JOptionPane.OK_CANCEL_OPTION);
+        DragCropPanel cropPanel = new DragCropPanel(srcImg);
+        int result = JOptionPane.showConfirmDialog(this, cropPanel, "Drag on the image to crop",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (result != JOptionPane.OK_OPTION) return;
-        try {
-            int x = Integer.parseInt(xField.getText().trim());
-            int y = Integer.parseInt(yField.getText().trim());
-            int width = Integer.parseInt(widthField.getText().trim());
-            int height = Integer.parseInt(heightField.getText().trim());
-            if (x < 0 || y < 0 || width <= 0 || height <= 0
-                    || x + width > srcImg.getWidth() || y + height > srcImg.getHeight()) {
-                throw new IllegalArgumentException("Crop area image-க்கு வெளியே போகக்கூடாது.");
+        Rectangle selection = cropPanel.imageSelection();
+        if (selection == null || selection.width < 2 || selection.height < 2) {
+            app.flash("Image மீது drag செய்து crop area select செய்யவும்.", StatusBar.Kind.WARN);
+            return;
+        }
+        BufferedImage cropped = new BufferedImage(selection.width, selection.height, BufferedImage.TYPE_INT_RGB);
+        Graphics2D graphics = cropped.createGraphics();
+        graphics.drawImage(srcImg, 0, 0, selection.width, selection.height,
+                selection.x, selection.y, selection.x + selection.width, selection.y + selection.height, null);
+        graphics.dispose();
+        srcImg = cropped;
+        showSourceImage(ImageUtil.humanSize(selection.width * (long) selection.height * 3));
+        app.flash("✓ Photo crop செய்யப்பட்டது.", StatusBar.Kind.OK);
+    }
+
+    private static final class DragCropPanel extends JPanel {
+        private final BufferedImage image;
+        private final double scale;
+        private final int drawWidth;
+        private final int drawHeight;
+        private Point dragStart;
+        private Rectangle selection;
+
+        DragCropPanel(BufferedImage image) {
+            this.image = image;
+            scale = Math.min(1.0, Math.min(720.0 / image.getWidth(), 520.0 / image.getHeight()));
+            drawWidth = Math.max(1, (int) Math.round(image.getWidth() * scale));
+            drawHeight = Math.max(1, (int) Math.round(image.getHeight() * scale));
+            setPreferredSize(new Dimension(drawWidth, drawHeight));
+            setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
+            addMouseListener(new MouseAdapter() {
+                @Override
+                public void mousePressed(MouseEvent event) {
+                    dragStart = clampPoint(event.getPoint());
+                    selection = new Rectangle(dragStart);
+                    repaint();
+                }
+
+                @Override
+                public void mouseReleased(MouseEvent event) {
+                    updateSelection(event.getPoint());
+                }
+            });
+            addMouseMotionListener(new MouseAdapter() {
+                @Override
+                public void mouseDragged(MouseEvent event) {
+                    updateSelection(event.getPoint());
+                }
+            });
+        }
+
+        private Point clampPoint(Point point) {
+            return new Point(Math.max(0, Math.min(drawWidth, point.x)),
+                    Math.max(0, Math.min(drawHeight, point.y)));
+        }
+
+        private void updateSelection(Point point) {
+            if (dragStart == null) return;
+            Point end = clampPoint(point);
+            selection = new Rectangle(Math.min(dragStart.x, end.x), Math.min(dragStart.y, end.y),
+                    Math.abs(dragStart.x - end.x), Math.abs(dragStart.y - end.y));
+            repaint();
+        }
+
+        Rectangle imageSelection() {
+            if (selection == null || selection.width < 2 || selection.height < 2) return null;
+            return new Rectangle(
+                    (int) Math.round(selection.x / scale),
+                    (int) Math.round(selection.y / scale),
+                    Math.min(image.getWidth() - (int) Math.round(selection.x / scale),
+                            Math.max(1, (int) Math.round(selection.width / scale))),
+                    Math.min(image.getHeight() - (int) Math.round(selection.y / scale),
+                            Math.max(1, (int) Math.round(selection.height / scale))));
+        }
+
+        @Override
+        protected void paintComponent(Graphics graphics) {
+            super.paintComponent(graphics);
+            Graphics2D g = (Graphics2D) graphics.create();
+            g.drawImage(image, 0, 0, drawWidth, drawHeight, null);
+            if (selection != null && selection.width > 1 && selection.height > 1) {
+                g.setColor(new Color(13, 125, 114, 55));
+                g.fill(selection);
+                g.setColor(Theme.TEAL);
+                g.setStroke(new BasicStroke(2));
+                g.draw(selection);
             }
-            BufferedImage cropped = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-            Graphics2D graphics = cropped.createGraphics();
-            graphics.drawImage(srcImg, 0, 0, width, height, x, y, x + width, y + height, null);
-            graphics.dispose();
-            srcImg = cropped;
-            showSourceImage(ImageUtil.humanSize(width * (long) height * 3));
-            app.flash("✓ Photo crop செய்யப்பட்டது.", StatusBar.Kind.OK);
-        } catch (NumberFormatException e) {
-            app.flash("Crop அளவுகள் numbers ஆக இருக்க வேண்டும்.", StatusBar.Kind.ERR);
-        } catch (IllegalArgumentException e) {
-            app.flash(e.getMessage(), StatusBar.Kind.ERR);
+            g.dispose();
         }
     }
 
