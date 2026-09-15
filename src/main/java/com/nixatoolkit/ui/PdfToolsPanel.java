@@ -96,7 +96,7 @@ public class PdfToolsPanel extends JPanel implements ToolPanel {
         card.add(titleLabel);
         card.add(Box.createVerticalStrut(8));
 
-        JLabel descriptionLabel = new JLabel("<html><div style='width:190px'>" + description + "</div></html>");
+        WrapLabel descriptionLabel = new WrapLabel(description, 190);
         descriptionLabel.setFont(Theme.uiFont(12));
         descriptionLabel.setForeground(Theme.INK_SOFT);
         descriptionLabel.setAlignmentX(Component.LEFT_ALIGNMENT);

@@ -100,9 +100,9 @@ public class ResizePanel extends JPanel implements ToolPanel {
         top.add(controls);
         applyPreset();
 
-        JLabel note = new JLabel("<html><div style='width:820px'>இவை பொதுவாக பயன்படும் அளவுகள் — "
+        WrapLabel note = new WrapLabel("இவை பொதுவாக பயன்படும் அளவுகள் — "
                 + "ஒவ்வொரு போர்டல் notification-லும் exact spec மாறலாம். Upload செய்யும் site-ல் சொல்லிருக்கிற "
-                + "அளவை பாத்து Custom-ல் மாற்றிக்கோங்க.</div></html>");
+                + "அளவை பாத்து Custom-ல் மாற்றிக்கோங்க.", 820);
         note.setFont(Theme.uiFont(11));
         note.setForeground(Theme.WARN);
         note.setOpaque(true);

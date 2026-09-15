@@ -25,16 +25,16 @@ public class HistoryPanel extends JPanel implements ToolPanel {
 
     private static final Map<String, String[]> KIND_LABELS = new LinkedHashMap<>();
     static {
-        KIND_LABELS.put("scan", new String[]{"🖨️", "Scan → PDF", "Scan"});
-        KIND_LABELS.put("convert", new String[]{"🖼️", "Image Converter", "Convert"});
-        KIND_LABELS.put("compress", new String[]{"📉", "Reduce File Size", "Compress"});
-        KIND_LABELS.put("resize", new String[]{"📐", "Form Photo / Signature", "Resize"});
-        KIND_LABELS.put("capture", new String[]{"📷", "Photo Import", "Capture"});
+        KIND_LABELS.put("scan", new String[]{"Scan → PDF", "Scan"});
+        KIND_LABELS.put("convert", new String[]{"Image Converter", "Convert"});
+        KIND_LABELS.put("compress", new String[]{"Reduce File Size", "Compress"});
+        KIND_LABELS.put("resize", new String[]{"Form Photo / Signature", "Resize"});
+        KIND_LABELS.put("capture", new String[]{"Photo Import", "Capture"});
     }
 
     public static String shortLabel(String kind) {
         String[] l = KIND_LABELS.get(kind);
-        return l != null ? (l[0] + " " + l[2]) : kind;
+        return l != null ? l[1] : kind;
     }
 
     public HistoryPanel(App app) {
@@ -128,43 +128,6 @@ public class HistoryPanel extends JPanel implements ToolPanel {
         }
         activityTable.revalidate();
         activityTable.repaint();
-    }
-
-    private JPanel historyRow(HistoryStore.Entry entry) {
-        String[] l = KIND_LABELS.get(entry.kind);
-        String icon = l != null ? l[0] : "📄";
-        String label = l != null ? l[1] : entry.kind;
-
-        JPanel row = new JPanel(new BorderLayout(10, 0));
-        row.setBackground(Theme.BG);
-        row.setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
-        row.setAlignmentX(Component.LEFT_ALIGNMENT);
-        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 56));
-
-        JLabel iconLabel = new JLabel(icon);
-        iconLabel.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 18));
-        row.add(iconLabel, BorderLayout.WEST);
-
-        JPanel textBox = new JPanel();
-        textBox.setOpaque(false);
-        textBox.setLayout(new BoxLayout(textBox, BoxLayout.Y_AXIS));
-        JLabel titleLabel = new JLabel(label);
-        titleLabel.setFont(Theme.uiFont(Font.BOLD, 12));
-        titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        JLabel detailLabel = new JLabel(entry.detail);
-        detailLabel.setFont(Theme.uiFont(11));
-        detailLabel.setForeground(Theme.INK_SOFT);
-        detailLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        textBox.add(titleLabel);
-        textBox.add(detailLabel);
-        row.add(textBox, BorderLayout.CENTER);
-
-        JLabel tsLabel = new JLabel(entry.ts);
-        tsLabel.setFont(Theme.uiFont(10));
-        tsLabel.setForeground(Theme.INK_SOFT);
-        row.add(tsLabel, BorderLayout.EAST);
-
-        return row;
     }
 
     @Override

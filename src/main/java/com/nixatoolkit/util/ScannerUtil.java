@@ -24,8 +24,20 @@ public final class ScannerUtil {
     }
 
     public static class ScannerException extends Exception {
+        private final boolean cameraPermissionIssue;
+
         public ScannerException(String message) {
+            this(message, false);
+        }
+
+        public ScannerException(String message, boolean cameraPermissionIssue) {
             super(message);
+            this.cameraPermissionIssue = cameraPermissionIssue;
+        }
+
+        /** True when Windows likely hid the camera because desktop-app camera access is off in Settings. */
+        public boolean isCameraPermissionIssue() {
+            return cameraPermissionIssue;
         }
     }
 
@@ -171,6 +183,12 @@ public final class ScannerUtil {
             process.waitFor(120, TimeUnit.SECONDS);
             if (process.exitValue() == 2) return null;
             if (process.exitValue() != 0) {
+                boolean permissionIssue = output.toLowerCase().contains("no wia device of the selected type");
+                if (permissionIssue) {
+                    throw new ScannerException(
+                            "Camera-க்கு permission இல்லை போல. Windows Settings-ல் \"Let desktop apps access "
+                            + "your camera\" ஐ ON பண்ணி மறுபடி முயற்சி செய்யவும்.", true);
+                }
                 throw new ScannerException("Windows Camera திறக்க முடியவில்லை" +
                         (output.isBlank() ? "" : ": " + output.trim()));
             }

@@ -238,8 +238,8 @@ public class ScanPanel extends JPanel implements ToolPanel {
     private void renderPages() {
         listPanel.removeAll();
         if (pages.isEmpty()) {
-            JLabel empty = new JLabel("<html><div style='width:600px'>இன்னும் பக்கங்கள் இல்லை — Scanner-ல் "
-                    + "இருந்து scan பண்ணவும் அல்லது image file சேர்க்கவும்.</div></html>");
+            WrapLabel empty = new WrapLabel("இன்னும் பக்கங்கள் இல்லை — Scanner-ல் "
+                    + "இருந்து scan பண்ணவும் அல்லது image file சேர்க்கவும்.", 600);
             empty.setFont(Theme.uiFont(12));
             empty.setForeground(Theme.WARN);
             empty.setOpaque(true);

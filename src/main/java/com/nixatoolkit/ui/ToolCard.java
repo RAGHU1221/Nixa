@@ -14,7 +14,7 @@ import java.awt.event.MouseEvent;
 
 /** A clickable card on the Home dashboard. */
 public class ToolCard extends JPanel {
-    public ToolCard(String icon, String titleTa, String titleEn, String desc, Runnable onClick) {
+    public ToolCard(String iconKind, String titleTa, String titleEn, String desc, Runnable onClick) {
         setLayout(new BorderLayout());
         setBackground(Theme.SURFACE);
         setBorder(BorderFactory.createCompoundBorder(
@@ -22,8 +22,7 @@ public class ToolCard extends JPanel {
                 BorderFactory.createEmptyBorder(14, 16, 14, 16)));
         setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
-        JLabel iconLabel = new JLabel(icon);
-        iconLabel.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 26));
+        JLabel iconLabel = new JLabel(new AppIcon(iconKind, 28));
         iconLabel.setHorizontalAlignment(SwingConstants.LEFT);
 
         JPanel textBox = new JPanel();
@@ -41,7 +40,7 @@ public class ToolCard extends JPanel {
         title.setBorder(BorderFactory.createEmptyBorder(4, 0, 6, 0));
         title.setAlignmentX(0f);
 
-        JLabel body = new JLabel("<html><div style='width:220px'>" + desc + "</div></html>");
+        WrapLabel body = new WrapLabel(desc, 220);
         body.setFont(Theme.uiFont(12));
         body.setForeground(Theme.INK_SOFT);
         body.setAlignmentX(0f);

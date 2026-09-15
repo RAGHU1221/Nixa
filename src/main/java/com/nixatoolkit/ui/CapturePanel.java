@@ -13,6 +13,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.time.format.DateTimeFormatter;
 
 /**
@@ -42,8 +43,8 @@ public class CapturePanel extends JPanel implements ToolPanel {
         header.setAlignmentX(Component.LEFT_ALIGNMENT);
         top.add(header);
 
-        JLabel note = new JLabel("<html><div style='width:820px'>Open Camera அழுத்தினால் Windows camera preview திறக்கும். "
-            + "Capture செய்த image இங்கே preview ஆகும்; file photo-வும் தேர்வு செய்யலாம்.</div></html>");
+        WrapLabel note = new WrapLabel("Open Camera அழுத்தினால் Windows camera preview திறக்கும். "
+            + "Capture செய்த image இங்கே preview ஆகும்; file photo-வும் தேர்வு செய்யலாம்.", 820);
         note.setFont(Theme.uiFont(11));
         note.setForeground(Theme.WARN);
         note.setOpaque(true);
@@ -107,7 +108,11 @@ public class CapturePanel extends JPanel implements ToolPanel {
             protected void done() {
                 cameraBtn.setEnabled(true);
                 if (error != null) {
-                    app.flash(error.getMessage(), StatusBar.Kind.ERR);
+                    if (error.isCameraPermissionIssue()) {
+                        showCameraPermissionPrompt(error.getMessage());
+                    } else {
+                        app.flash(error.getMessage(), StatusBar.Kind.ERR);
+                    }
                     return;
                 }
                 try {
@@ -128,6 +133,20 @@ public class CapturePanel extends JPanel implements ToolPanel {
             }
         };
         worker.execute();
+    }
+
+    private void showCameraPermissionPrompt(String message) {
+        app.flash(message, StatusBar.Kind.ERR);
+        Object[] options = {"Camera Settings திற", "சரி"};
+        int choice = JOptionPane.showOptionDialog(this, message, "Camera Permission தேவை",
+                JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[0]);
+        if (choice == 0) {
+            try {
+                Desktop.getDesktop().browse(new URI("ms-settings:privacy-webcam"));
+            } catch (Exception e) {
+                app.flash("Settings திறக்க முடியல்: " + e.getMessage(), StatusBar.Kind.ERR);
+            }
+        }
     }
 
     private void onPick() {

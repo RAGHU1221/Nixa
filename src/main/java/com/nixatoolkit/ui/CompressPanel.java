@@ -33,7 +33,7 @@ public class CompressPanel extends JPanel implements ToolPanel {
         private final JComboBox<String> qualityMenu = new JComboBox<>(
             new String[]{"Best quality", "Balanced", "Smallest file"});
     private final JButton compressBtn = new JButton("Compress");
-    private final JLabel pdfNote = new JLabel();
+    private final WrapLabel pdfNote = new WrapLabel("", 820);
     private final JLabel beforeLabel = new JLabel(" ");
     private final JLabel afterLabel = new JLabel(" ");
     private final JLabel beforeImgLabel = new JLabel();
@@ -85,10 +85,10 @@ public class CompressPanel extends JPanel implements ToolPanel {
         Theme.styleGreenButtons(controls);
         top.add(controls);
 
-        pdfNote.setText("<html><div style='width:820px'>PDF-ஐ compress பண்ணும்போது, நம்ம tool இந்த PDF-ல் "
+        pdfNote.setText("PDF-ஐ compress பண்ணும்போது, நம்ம tool இந்த PDF-ல் "
                 + "இருக்கிற scan செய்த பட பக்கங்களை (JPEG images) கண்டுபிடித்து மறுபடி compress செய்யும் — "
                 + "scan செய்த/photo PDF-க்கு இது நல்லா வேலை செய்யும். Typed-text (born-digital) PDF-ல் "
-                + "பட பக்கங்கள் இல்லாததால் இது வேலை செய்யாது.</div></html>");
+                + "பட பக்கங்கள் இல்லாததால் இது வேலை செய்யாது.");
         pdfNote.setFont(Theme.uiFont(11));
         pdfNote.setForeground(Theme.WARN);
         pdfNote.setOpaque(true);

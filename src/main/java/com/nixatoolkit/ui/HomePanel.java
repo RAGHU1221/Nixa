@@ -63,26 +63,27 @@ public class HomePanel extends JPanel implements ToolPanel {
         JPanel cardsGrid = new JPanel(new GridLayout(0, 3, 10, 10));
         cardsGrid.setOpaque(false);
         cardsGrid.setAlignmentX(Component.LEFT_ALIGNMENT);
-        cardsGrid.add(new ToolCard("🖨️", "ஸ்கேன் → PDF", "Scan to PDF",
+        cardsGrid.add(new ToolCard(AppIcon.SCAN, "ஸ்கேன் → PDF", "Scan to PDF",
                 "Scanner-ஐ நேரடியா இணைத்து scan பண்ணி, பல பக்கங்களை ஒரே PDF ஆக்கலாம்.",
                 () -> app.showPanel("scan")));
-        cardsGrid.add(new ToolCard("🖼️", "படிவ மாற்று", "Image Converter",
+        cardsGrid.add(new ToolCard(AppIcon.CONVERT, "படிவ மாற்று", "Image Converter",
                 "JPG மற்றும் PNG இடையே மாற்றவும், பல படங்களையும் ஒரே நேரத்தில்.",
                 () -> app.showPanel("convert")));
-        cardsGrid.add(new ToolCard("📉", "அளவு குறை", "Reduce File Size",
+        cardsGrid.add(new ToolCard(AppIcon.COMPRESS, "அளவு குறை", "Reduce File Size",
                 "Photo அல்லது PDF-ஐ நீங்க கேட்ட KB அளவுக்குள் தானாக compress பண்ணும்.",
                 () -> app.showPanel("compress")));
-        cardsGrid.add(new ToolCard("📐", "படிவ புகைப்படம்", "Form Photo / Signature",
+        cardsGrid.add(new ToolCard(AppIcon.RESIZE, "படிவ புகைப்படம்", "Form Photo / Signature",
                 "Passport, Aadhaar, PAN, Signature — exact pixel + KB அளவுக்கு தயார்.",
                 () -> app.showPanel("resize")));
-        cardsGrid.add(new ToolCard("📷", "புகைப்படம் Import", "Photo Import",
+        cardsGrid.add(new ToolCard(AppIcon.CAPTURE, "புகைப்படம் Import", "Photo Import",
                 "ஏற்கனவே எடுத்த ஒரு photo-ஐ pick பண்ணி use பண்ணலாம்.",
                 () -> app.showPanel("capture")));
 
         top.add(cardsGrid);
         top.add(Box.createVerticalStrut(16));
 
-        JLabel linksLabel = new JLabel("🔗 அரசு சேவைகள் · Quick Links");
+        JLabel linksLabel = new JLabel("அரசு சேவைகள் · Quick Links", new AppIcon(AppIcon.LINK, 14), SwingConstants.LEFT);
+        linksLabel.setIconTextGap(6);
         linksLabel.setFont(Theme.uiFont(Font.BOLD, 12));
         linksLabel.setForeground(Theme.INK_SOFT);
         linksLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
