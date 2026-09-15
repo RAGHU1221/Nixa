@@ -4,6 +4,7 @@ import com.nixatoolkit.App;
 import com.nixatoolkit.Theme;
 import com.nixatoolkit.util.HistoryStore;
 import com.nixatoolkit.util.ImageUtil;
+import com.nixatoolkit.util.ScannerUtil;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
