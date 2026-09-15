@@ -46,7 +46,6 @@ public class PdfToolsPanel extends JPanel implements ToolPanel {
         tools.setOpaque(false);
         tools.setAlignmentX(Component.LEFT_ALIGNMENT);
         tools.add(toolCard("Images to PDF", "Combine photos into one PDF document.", "Create PDF", this::imagesToPdf));
-        tools.add(toolCard("JPG to PDF", "Turn one or more images into a PDF.", "Convert Images", this::imagesToPdf));
         tools.add(toolCard("Merge PDFs", "Combine scanned PDF files in the selected order.", "Merge Files", this::mergePdfs));
         tools.add(toolCard("Extract PDF Pages", "Export scanned pages as JPG images.", "Extract Pages", this::extractPages));
         tools.add(toolCard("PDF to JPG", "Export every scanned PDF page as an image.", "Convert Pages", this::extractPages));
