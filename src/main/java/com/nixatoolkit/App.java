@@ -27,7 +27,7 @@ import java.util.Map;
  * see README.md for why.
  */
 public class App extends JFrame {
-    public static final String APP_VERSION = "1.0.14";
+    public static final String APP_VERSION = "1.0.15";
 
     private final Map<String, JComponent> panels = new LinkedHashMap<>();
     private final Map<String, JButton> navButtons = new LinkedHashMap<>();
@@ -65,7 +65,7 @@ public class App extends JFrame {
 
         add(buildWorkspaceHeader(), BorderLayout.NORTH);
 
-        content.setBorder(BorderFactory.createEmptyBorder(18, 18, 0, 18));
+        content.setBorder(BorderFactory.createEmptyBorder(14, 14, 14, 14));
         content.setBackground(Theme.BG);
         add(content, BorderLayout.CENTER);
 
