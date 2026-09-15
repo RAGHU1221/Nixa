@@ -91,6 +91,18 @@ public final class Theme {
         }
     }
 
+    public static void styleGreenButtons(Container root) {
+        for (java.awt.Component component : root.getComponents()) {
+            if (component instanceof JButton) {
+                ((JButton) component).putClientProperty("buttonTone", "green");
+                ((JButton) component).repaint();
+            }
+            if (component instanceof Container) {
+                styleGreenButtons((Container) component);
+            }
+        }
+    }
+
     private static void styleButton(JButton button) {
         String text = button.getText() == null ? "" : button.getText().toLowerCase();
         boolean danger = text.contains("delete") || text.contains("remove") || text.contains("clear");
@@ -120,8 +132,11 @@ public final class Theme {
                     && (button.getText().toLowerCase().contains("delete")
                     || button.getText().toLowerCase().contains("remove")
                     || button.getText().toLowerCase().contains("clear"));
-            Color base = danger ? new Color(0xD9, 0x4A, 0x3A) : BUTTON_ORANGE;
-            Color highlight = danger ? new Color(0xF1, 0x76, 0x66) : BUTTON_ORANGE_LIGHT;
+                boolean green = "green".equals(button.getClientProperty("buttonTone"));
+                    Color base = green ? new Color(0x239B67)
+                        : (danger ? new Color(0xD9, 0x4A, 0x3A) : BUTTON_ORANGE);
+                    Color highlight = green ? new Color(0x55C98A)
+                        : (danger ? new Color(0xF1, 0x76, 0x66) : BUTTON_ORANGE_LIGHT);
             if (!button.isEnabled()) {
                 base = new Color(0xB8, 0xB8, 0xB8);
                 highlight = new Color(0xD8, 0xD8, 0xD8);

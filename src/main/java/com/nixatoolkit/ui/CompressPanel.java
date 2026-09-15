@@ -70,14 +70,19 @@ public class CompressPanel extends JPanel implements ToolPanel {
         chooseBtn.setFont(Theme.uiFont(13));
         chooseBtn.addActionListener(e -> onChoose());
         controls.add(chooseBtn);
-        JButton clearBtn = new JButton("Clear");
-        clearBtn.setFont(Theme.uiFont(13));
-        clearBtn.addActionListener(e -> clearSelection());
-        controls.add(clearBtn);
         compressBtn.setFont(Theme.uiFont(13));
         compressBtn.setEnabled(false);
         compressBtn.addActionListener(e -> onCompress());
         controls.add(compressBtn);
+        saveBtn.setFont(Theme.uiFont(13));
+        saveBtn.setEnabled(false);
+        saveBtn.addActionListener(e -> onSave());
+        controls.add(saveBtn);
+        JButton clearBtn = new JButton("Clear");
+        clearBtn.setFont(Theme.uiFont(13));
+        clearBtn.addActionListener(e -> clearSelection());
+        controls.add(clearBtn);
+        Theme.styleGreenButtons(controls);
         top.add(controls);
 
         pdfNote.setText("<html><div style='width:820px'>PDF-ஐ compress பண்ணும்போது, நம்ம tool இந்த PDF-ல் "
@@ -119,12 +124,6 @@ public class CompressPanel extends JPanel implements ToolPanel {
 
         top.add(resultPanel);
         top.add(Box.createVerticalStrut(6));
-
-        saveBtn.setFont(Theme.uiFont(13));
-        saveBtn.setEnabled(false);
-        saveBtn.addActionListener(e -> onSave());
-        saveBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
-        top.add(saveBtn);
 
         JScrollPane scroll = new JScrollPane(top);
         scroll.setBorder(null);

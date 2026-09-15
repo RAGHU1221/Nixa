@@ -85,7 +85,7 @@ if exist packaging\icon.ico set ICON_ARG=--icon packaging\icon.ico
 
 jpackage --type app-image --name "Nixa Toolkit" --input dist ^
     --main-jar NixaToolkit.jar --main-class com.nixatoolkit.App ^
-    --dest dist-app --app-version 1.0.5 ^
+    --dest dist-app --app-version 1.0.6 ^
     --vendor "Nixa Toolkit" %ICON_ARG%
 if errorlevel 1 (
     echo.
@@ -105,7 +105,7 @@ echo        problem illa - Step 3-la vandha app folder already use panniducha.^)
 echo.
 jpackage --type exe --name "Nixa Toolkit" --input dist ^
     --main-jar NixaToolkit.jar --main-class com.nixatoolkit.App ^
-    --dest dist-installer --app-version 1.0.5 ^
+    --dest dist-installer --app-version 1.0.6 ^
     --vendor "Nixa Toolkit" --win-shortcut --win-menu %ICON_ARG% 2>nul
 if not errorlevel 1 (
     echo     OK - dist-installer\ - oru setup .exe ready, adha share pannalam.

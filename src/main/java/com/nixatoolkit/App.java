@@ -27,7 +27,7 @@ import java.util.Map;
  * see README.md for why.
  */
 public class App extends JFrame {
-    public static final String APP_VERSION = "1.0.5";
+    public static final String APP_VERSION = "1.0.6";
 
     private final Map<String, JComponent> panels = new LinkedHashMap<>();
     private final Map<String, JButton> navButtons = new LinkedHashMap<>();
