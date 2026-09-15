@@ -45,3 +45,53 @@ jobs:
         with:
           name: nixa-toolkit-jar
           path: dist/NixaToolkit.jar
+
+  package-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install WiX Toolset
+        shell: pwsh
+        run: |
+          choco install wixtoolset --no-progress --yes
+          $env:Path = [Environment]::GetEnvironmentVariable('Path', 'Machine') + ';' + [Environment]::GetEnvironmentVariable('Path', 'User')
+
+      - name: Build Windows installer
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Remove-Item out, dist, dist-installer -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Path out, dist, dist-installer | Out-Null
+          Get-ChildItem src/main/java -Recurse -Filter *.java | ForEach-Object FullName | Set-Content sources.txt
+          javac -encoding UTF-8 -d out '@sources.txt'
+          jar --create --file dist/NixaToolkit.jar --main-class com.nixatoolkit.App -C out .
+          $jpackageArgs = @(
+            '--type', 'exe',
+            '--name', 'Nixa Toolkit',
+            '--input', 'dist',
+            '--main-jar', 'NixaToolkit.jar',
+            '--main-class', 'com.nixatoolkit.App',
+            '--dest', 'dist-installer',
+            '--app-version', '1.0.0',
+            '--vendor', 'Nixa Toolkit'
+          )
+          if (Test-Path packaging/icon.ico) {
+            $jpackageArgs += @('--icon', 'packaging/icon.ico')
+          }
+          & jpackage @jpackageArgs
+
+      - name: Upload Windows installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: nixa-toolkit-windows-exe
+          path: dist-installer/*.exe
+          if-no-files-found: error
