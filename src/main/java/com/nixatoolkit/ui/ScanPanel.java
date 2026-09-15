@@ -11,6 +11,8 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -42,7 +44,7 @@ public class ScanPanel extends JPanel implements ToolPanel {
         top.setOpaque(false);
         top.setLayout(new BoxLayout(top, BoxLayout.Y_AXIS));
 
-        JLabel header = new JLabel("ஸ்கேன் → PDF · Scan to PDF");
+        JLabel header = new JLabel("Scan to PDF");
         header.setFont(Theme.uiFont(Font.BOLD, 20));
         header.setAlignmentX(Component.LEFT_ALIGNMENT);
         top.add(header);
@@ -137,9 +139,9 @@ public class ScanPanel extends JPanel implements ToolPanel {
                 try {
                     List<String> names = get();
                     if (!names.isEmpty()) {
-                        statusLine.setText("🟢 Scanner connected: " + String.join(", ", names));
+                        statusLine.setText("Scanner connected: " + String.join(", ", names));
                     } else {
-                        statusLine.setText("⚪ எந்த Scanner-உம் இப்போ கண்டுபிடிக்கப்படல் (அல்லது இது Windows இல்ல) "
+                        statusLine.setText("No scanner found (or this is not Windows) "
                                 + "— 'Scan from Scanner' அழுத்தி மறுபடி முயற்சி செய்யலாம்.");
                     }
                     String selected = (String) scannerMenu.getSelectedItem();
@@ -353,43 +355,139 @@ public class ScanPanel extends JPanel implements ToolPanel {
             app.flash("முதலில் ஒரு image அல்லது scan page சேர்க்கவும்.", StatusBar.Kind.WARN);
             return;
         }
-        BufferedImage current = pages.get(pages.size() - 1);
-        JTextField xField = new JTextField("0");
-        JTextField yField = new JTextField("0");
-        JTextField widthField = new JTextField(String.valueOf(current.getWidth()));
-        JTextField heightField = new JTextField(String.valueOf(current.getHeight()));
-        JPanel form = new JPanel(new GridLayout(4, 2, 8, 8));
-        form.add(new JLabel("Left (x):"));
-        form.add(xField);
-        form.add(new JLabel("Top (y):"));
-        form.add(yField);
-        form.add(new JLabel("Width:"));
-        form.add(widthField);
-        form.add(new JLabel("Height:"));
-        form.add(heightField);
-        int result = JOptionPane.showConfirmDialog(this, form, "Crop last scanned image",
+        DragRotateCropPanel cropPanel = new DragRotateCropPanel(pages.get(pages.size() - 1));
+        int result = JOptionPane.showConfirmDialog(this, cropPanel, "Drag to crop and straighten image",
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (result != JOptionPane.OK_OPTION) return;
-        try {
-            int x = Integer.parseInt(xField.getText().trim());
-            int y = Integer.parseInt(yField.getText().trim());
-            int width = Integer.parseInt(widthField.getText().trim());
-            int height = Integer.parseInt(heightField.getText().trim());
-            if (x < 0 || y < 0 || width <= 0 || height <= 0
-                    || x + width > current.getWidth() || y + height > current.getHeight()) {
-                throw new IllegalArgumentException("Crop area image-க்கு வெளியே போகக்கூடாது.");
-            }
-            BufferedImage cropped = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-            Graphics2D graphics = cropped.createGraphics();
-            graphics.drawImage(current, 0, 0, width, height, x, y, x + width, y + height, null);
+        BufferedImage cropped = cropPanel.cropSelection();
+        if (cropped == null) {
+            app.flash("Image மீது drag செய்து crop area select செய்யவும்.", StatusBar.Kind.WARN);
+            return;
+        }
+        pages.set(pages.size() - 1, cropped);
+        renderPages();
+        app.flash("Image crop and straighten completed.", StatusBar.Kind.OK);
+    }
+
+    private static final class DragRotateCropPanel extends JPanel {
+        private final CropCanvas canvas;
+        private final JSlider rotateSlider = new JSlider(-180, 180, 0);
+        private BufferedImage transformed;
+
+        DragRotateCropPanel(BufferedImage source) {
+            setLayout(new BorderLayout(0, 8));
+            transformed = ImageUtil.toRgb(source);
+            canvas = new CropCanvas(transformed);
+            rotateSlider.setMajorTickSpacing(90);
+            rotateSlider.setMinorTickSpacing(15);
+            rotateSlider.setPaintTicks(true);
+            rotateSlider.setPaintLabels(true);
+            rotateSlider.addChangeListener(e -> {
+                transformed = rotate(source, rotateSlider.getValue());
+                canvas.setImage(transformed);
+            });
+            add(canvas, BorderLayout.CENTER);
+            add(rotateSlider, BorderLayout.SOUTH);
+        }
+
+        BufferedImage cropSelection() {
+            Rectangle selection = canvas.imageSelection();
+            if (selection == null) return null;
+            BufferedImage result = new BufferedImage(selection.width, selection.height, BufferedImage.TYPE_INT_RGB);
+            Graphics2D graphics = result.createGraphics();
+            graphics.drawImage(transformed, 0, 0, selection.width, selection.height,
+                    selection.x, selection.y, selection.x + selection.width, selection.y + selection.height, null);
             graphics.dispose();
-            pages.set(pages.size() - 1, cropped);
-            renderPages();
-            app.flash("✓ Image crop செய்யப்பட்டது.", StatusBar.Kind.OK);
-        } catch (NumberFormatException e) {
-            app.flash("Crop அளவுகள் numbers ஆக இருக்க வேண்டும்.", StatusBar.Kind.ERR);
-        } catch (IllegalArgumentException e) {
-            app.flash(e.getMessage(), StatusBar.Kind.ERR);
+            return result;
+        }
+
+        private static BufferedImage rotate(BufferedImage source, int degrees) {
+            double radians = Math.toRadians(degrees);
+            double sin = Math.abs(Math.sin(radians));
+            double cos = Math.abs(Math.cos(radians));
+            int width = (int) Math.floor(source.getWidth() * cos + source.getHeight() * sin);
+            int height = (int) Math.floor(source.getWidth() * sin + source.getHeight() * cos);
+            BufferedImage output = new BufferedImage(Math.max(1, width), Math.max(1, height), BufferedImage.TYPE_INT_RGB);
+            Graphics2D graphics = output.createGraphics();
+            graphics.setColor(Color.WHITE);
+            graphics.fillRect(0, 0, output.getWidth(), output.getHeight());
+            graphics.translate((output.getWidth() - source.getWidth()) / 2.0,
+                    (output.getHeight() - source.getHeight()) / 2.0);
+            graphics.rotate(radians, source.getWidth() / 2.0, source.getHeight() / 2.0);
+            graphics.drawImage(source, 0, 0, null);
+            graphics.dispose();
+            return output;
+        }
+    }
+
+    private static final class CropCanvas extends JPanel {
+        private BufferedImage image;
+        private double scale;
+        private int drawWidth;
+        private int drawHeight;
+        private Point dragStart;
+        private Rectangle selection;
+
+        CropCanvas(BufferedImage image) {
+            setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
+            setPreferredSize(new Dimension(720, 480));
+            setImage(image);
+            addMouseListener(new MouseAdapter() {
+                @Override public void mousePressed(MouseEvent e) {
+                    dragStart = clamp(e.getPoint());
+                    selection = new Rectangle(dragStart);
+                    repaint();
+                }
+                @Override public void mouseReleased(MouseEvent e) { update(e.getPoint()); }
+            });
+            addMouseMotionListener(new MouseAdapter() {
+                @Override public void mouseDragged(MouseEvent e) { update(e.getPoint()); }
+            });
+        }
+
+        void setImage(BufferedImage image) {
+            this.image = image;
+            scale = Math.min(1.0, Math.min(700.0 / image.getWidth(), 420.0 / image.getHeight()));
+            drawWidth = Math.max(1, (int) Math.round(image.getWidth() * scale));
+            drawHeight = Math.max(1, (int) Math.round(image.getHeight() * scale));
+            selection = null;
+            revalidate();
+            repaint();
+        }
+
+        private Point clamp(Point p) {
+            return new Point(Math.max(0, Math.min(drawWidth, p.x)), Math.max(0, Math.min(drawHeight, p.y)));
+        }
+
+        private void update(Point p) {
+            if (dragStart == null) return;
+            Point end = clamp(p);
+            selection = new Rectangle(Math.min(dragStart.x, end.x), Math.min(dragStart.y, end.y),
+                    Math.abs(dragStart.x - end.x), Math.abs(dragStart.y - end.y));
+            repaint();
+        }
+
+        Rectangle imageSelection() {
+            if (selection == null || selection.width < 2 || selection.height < 2) return null;
+            int x = Math.min(image.getWidth() - 1, Math.max(0, (int) (selection.x / scale)));
+            int y = Math.min(image.getHeight() - 1, Math.max(0, (int) (selection.y / scale)));
+            int width = Math.min(image.getWidth() - x, Math.max(1, (int) (selection.width / scale)));
+            int height = Math.min(image.getHeight() - y, Math.max(1, (int) (selection.height / scale)));
+            return new Rectangle(x, y, width, height);
+        }
+
+        @Override protected void paintComponent(Graphics graphics) {
+            super.paintComponent(graphics);
+            Graphics2D g = (Graphics2D) graphics.create();
+            g.drawImage(image, 0, 0, drawWidth, drawHeight, null);
+            if (selection != null && selection.width > 1 && selection.height > 1) {
+                g.setColor(new Color(0, 103, 192, 55));
+                g.fill(selection);
+                g.setColor(Theme.TEAL);
+                g.setStroke(new BasicStroke(2));
+                g.draw(selection);
+            }
+            g.dispose();
         }
     }
 
