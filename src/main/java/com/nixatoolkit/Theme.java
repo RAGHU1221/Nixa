@@ -8,6 +8,11 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.AbstractButton;
 import javax.swing.JComponent;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JPanel;
+import javax.swing.JSlider;
+import javax.swing.JTextField;
 import javax.swing.plaf.basic.BasicButtonUI;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -30,24 +35,24 @@ public final class Theme {
     private Theme() {
     }
 
-    public static final Color BG = new Color(0xEE, 0xF3, 0xF2);
-    public static final Color SURFACE = new Color(0xFF, 0xFF, 0xFF);
-    public static final Color SURFACE_2 = new Color(0xE3, 0xEC, 0xE9);
-    public static final Color LINE = new Color(0xD3, 0xE0, 0xDC);
-    public static final Color INK = new Color(0x10, 0x1A, 0x20);
-    public static final Color INK_SOFT = new Color(0x5B, 0x6B, 0x74);
-    public static final Color TEAL = new Color(0x0D, 0x7D, 0x72);
-    public static final Color TEAL_HOVER = new Color(0x0A, 0x62, 0x59);
-    public static final Color MARIGOLD = new Color(0xE0, 0x8E, 0x2C);
-    public static final Color MARIGOLD_HOVER = new Color(0xC9, 0x74, 0x1C);
-    public static final Color BUTTON_ORANGE = new Color(0xF3, 0x91, 0x18);
-    public static final Color BUTTON_ORANGE_LIGHT = new Color(0xFF, 0xB2, 0x3B);
+    public static final Color BG = new Color(0x1C, 0x29, 0x38);
+    public static final Color SURFACE = new Color(0x25, 0x36, 0x49);
+    public static final Color SURFACE_2 = new Color(0x2D, 0x43, 0x59);
+    public static final Color LINE = new Color(0x3C, 0x58, 0x70);
+    public static final Color INK = new Color(0xE8, 0xF4, 0xFB);
+    public static final Color INK_SOFT = new Color(0xA8, 0xBC, 0xCD);
+    public static final Color TEAL = new Color(0x18, 0xB9, 0xEF);
+    public static final Color TEAL_HOVER = new Color(0x48, 0xD5, 0xFF);
+    public static final Color MARIGOLD = new Color(0x18, 0xB9, 0xEF);
+    public static final Color MARIGOLD_HOVER = new Color(0x48, 0xD5, 0xFF);
+    public static final Color BUTTON_ORANGE = new Color(0x18, 0xB9, 0xEF);
+    public static final Color BUTTON_ORANGE_LIGHT = new Color(0x5A, 0xDB, 0xFF);
     public static final Color SUCCESS = new Color(0x1C, 0x7D, 0x4D);
     public static final Color SUCCESS_BG = new Color(0xE0, 0xF2, 0xE6);
     public static final Color WARN = new Color(0xA3, 0x62, 0x0B);
-    public static final Color WARN_BG = new Color(0xFB, 0xEC, 0xD2);
-    public static final Color DANGER = new Color(0xB3, 0x31, 0x1F);
-    public static final Color DANGER_BG = new Color(0xFB, 0xE2, 0xDE);
+    public static final Color WARN_BG = new Color(0x4A, 0x3D, 0x27);
+    public static final Color DANGER = new Color(0xFF, 0x76, 0x78);
+    public static final Color DANGER_BG = new Color(0x52, 0x2E, 0x3A);
 
     private static final List<String> TAMIL_FONT_CANDIDATES = Arrays.asList(
             "Nirmala UI", "Vijaya", "Latha", "Noto Sans Tamil", "Kavivanar", "Arial Unicode MS");
@@ -94,12 +99,40 @@ public final class Theme {
     public static void styleGreenButtons(Container root) {
         for (java.awt.Component component : root.getComponents()) {
             if (component instanceof JButton) {
-                ((JButton) component).putClientProperty("buttonTone", "green");
+                ((JButton) component).putClientProperty("buttonTone", "cyan");
                 ((JButton) component).repaint();
             }
             if (component instanceof Container) {
                 styleGreenButtons((Container) component);
             }
+        }
+    }
+
+    public static void styleControls(Container root) {
+        for (java.awt.Component component : root.getComponents()) {
+            if (component instanceof JTextField) {
+                JTextField field = (JTextField) component;
+                field.setBackground(SURFACE_2);
+                field.setForeground(INK);
+                field.setCaretColor(TEAL_HOVER);
+                field.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(LINE), BorderFactory.createEmptyBorder(5, 8, 5, 8)));
+            } else if (component instanceof JComboBox) {
+                JComboBox<?> combo = (JComboBox<?>) component;
+                combo.setBackground(SURFACE_2);
+                combo.setForeground(INK);
+                combo.setBorder(BorderFactory.createLineBorder(LINE));
+            } else if (component instanceof JCheckBox) {
+                JCheckBox check = (JCheckBox) component;
+                check.setOpaque(false);
+                check.setForeground(INK);
+            } else if (component instanceof JSlider) {
+                component.setBackground(SURFACE_2);
+            } else if (component instanceof JPanel) {
+                JPanel panel = (JPanel) component;
+                if (panel.isOpaque()) panel.setBackground(SURFACE);
+            }
+            if (component instanceof Container) styleControls((Container) component);
         }
     }
 
@@ -132,11 +165,11 @@ public final class Theme {
                     && (button.getText().toLowerCase().contains("delete")
                     || button.getText().toLowerCase().contains("remove")
                     || button.getText().toLowerCase().contains("clear"));
-                boolean green = "green".equals(button.getClientProperty("buttonTone"));
-                    Color base = green ? new Color(0x239B67)
-                        : (danger ? new Color(0xD9, 0x4A, 0x3A) : BUTTON_ORANGE);
-                    Color highlight = green ? new Color(0x55C98A)
-                        : (danger ? new Color(0xF1, 0x76, 0x66) : BUTTON_ORANGE_LIGHT);
+            boolean cyan = "cyan".equals(button.getClientProperty("buttonTone"));
+            Color base = cyan ? BUTTON_ORANGE
+                    : (danger ? new Color(0xD9, 0x4A, 0x3A) : BUTTON_ORANGE);
+            Color highlight = cyan ? BUTTON_ORANGE_LIGHT
+                    : (danger ? new Color(0xF1, 0x76, 0x66) : BUTTON_ORANGE_LIGHT);
             if (!button.isEnabled()) {
                 base = new Color(0xB8, 0xB8, 0xB8);
                 highlight = new Color(0xD8, 0xD8, 0xD8);

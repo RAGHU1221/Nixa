@@ -27,7 +27,7 @@ import java.util.Map;
  * see README.md for why.
  */
 public class App extends JFrame {
-    public static final String APP_VERSION = "1.0.7";
+    public static final String APP_VERSION = "1.0.8";
 
     private final Map<String, JComponent> panels = new LinkedHashMap<>();
     private final Map<String, JButton> navButtons = new LinkedHashMap<>();
@@ -83,6 +83,7 @@ public class App extends JFrame {
         registerPanel("history", new HistoryPanel(this));
 
         Theme.styleButtons(content);
+        Theme.styleControls(content);
         showPanel("home");
 
         addWindowListener(new WindowAdapter() {
