@@ -35,7 +35,7 @@ jobs:
           javac -encoding UTF-8 -d out -cp out tools/TestHarness.java
 
       - name: Run automated tests
-        run: java -Djava.awt.headless=true -cp out com.nixatoolkit.ui.TestHarness
+        run: xvfb-run --auto-servernum java -cp out com.nixatoolkit.ui.TestHarness
 
       - name: Build runnable JAR
         run: jar --create --file dist/NixaToolkit.jar --main-class com.nixatoolkit.App -C out .
