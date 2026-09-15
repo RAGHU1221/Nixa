@@ -82,7 +82,9 @@ jobs:
             '--main-class', 'com.nixatoolkit.App',
             '--dest', 'dist-installer',
             '--app-version', '1.0.1',
-            '--vendor', 'Nixa Toolkit'
+            '--vendor', 'Nixa Toolkit',
+            '--win-shortcut',
+            '--win-menu'
           )
           if (Test-Path packaging/icon.ico) {
             $jpackageArgs += @('--icon', 'packaging/icon.ico')
