@@ -52,7 +52,14 @@ public final class ImageUtil {
      * center - matches how passport-photo tools work.
      */
     public static BufferedImage cropResizeCover(BufferedImage src, int targetW, int targetH) {
+        return cropResizeCover(src, targetW, targetH, 50);
+    }
+
+    /** Exact-size cover crop with vertical alignment from 0 (top) to 100 (bottom). */
+    public static BufferedImage cropResizeCover(BufferedImage src, int targetW, int targetH,
+                                                int verticalPosition) {
         src = toRgb(src);
+        verticalPosition = Math.max(0, Math.min(100, verticalPosition));
         int srcW = src.getWidth(), srcH = src.getHeight();
         double srcRatio = (double) srcW / srcH;
         double dstRatio = (double) targetW / targetH;
@@ -63,7 +70,7 @@ public final class ImageUtil {
             cropped = src.getSubimage(Math.max(0, x0), 0, Math.min(newW, srcW - Math.max(0, x0)), srcH);
         } else {
             int newH = Math.max(1, (int) Math.round(srcW / dstRatio));
-            int y0 = (srcH - newH) / 2;
+            int y0 = (int) Math.round((srcH - newH) * verticalPosition / 100.0);
             cropped = src.getSubimage(0, Math.max(0, y0), srcW, Math.min(newH, srcH - Math.max(0, y0)));
         }
         return scale(cropped, targetW, targetH);

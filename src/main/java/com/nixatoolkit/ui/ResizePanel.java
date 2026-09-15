@@ -43,6 +43,7 @@ public class ResizePanel extends JPanel implements ToolPanel {
     private final JCheckBox borderCheck = new JCheckBox("Add border");
     private final JComboBox<String> borderColorMenu = new JComboBox<>(new String[]{"Black", "White"});
     private final JTextField borderWidthEntry = new JTextField("2", 3);
+    private final JSlider verticalPositionSlider = new JSlider(0, 100, 50);
     private final JButton runBtn = new JButton("Resize + Compress");
     private final JButton cropBtn = new JButton("Crop Image");
     private final JButton scanBtn = new JButton("Scan Photo");
@@ -92,6 +93,10 @@ public class ResizePanel extends JPanel implements ToolPanel {
         controls.add(labeled("Border px:"));
         borderWidthEntry.setPreferredSize(new Dimension(42, 26));
         controls.add(borderWidthEntry);
+        controls.add(labeled("Crop position:"));
+        verticalPositionSlider.setPreferredSize(new Dimension(120, 28));
+        verticalPositionSlider.setToolTipText("Move crop from top to bottom to keep the head visible");
+        controls.add(verticalPositionSlider);
         top.add(controls);
         applyPreset();
 
@@ -387,7 +392,7 @@ public class ResizePanel extends JPanel implements ToolPanel {
 
     /** Package-visible, synchronous crop+resize+compress pass - used by onRun above and by tests. */
     ImageUtil.CompressResult resizeCompressSync(int w, int h, double targetKb) {
-        BufferedImage cropped = ImageUtil.cropResizeCover(srcImg, w, h);
+        BufferedImage cropped = ImageUtil.cropResizeCover(srcImg, w, h, verticalPositionSlider.getValue());
         if (borderCheck.isSelected()) {
             cropped = addBorder(cropped);
         }

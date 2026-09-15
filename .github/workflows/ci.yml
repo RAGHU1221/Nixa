@@ -81,7 +81,7 @@ jobs:
             '--main-jar', 'NixaToolkit.jar',
             '--main-class', 'com.nixatoolkit.App',
             '--dest', 'dist-installer',
-            '--app-version', '1.0.15',
+            '--app-version', '1.0.16',
             '--vendor', 'Nixa Toolkit',
             '--win-shortcut',
             '--win-menu'
