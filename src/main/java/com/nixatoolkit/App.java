@@ -200,15 +200,6 @@ public class App extends JFrame {
         }
 
         bar.add(Box.createVerticalGlue());
-        JLabel footer = new JLabel("<html><div style='width:170px'>"
-                + "எல்லாமே இந்த கணினியிலேயே process ஆகும் — "
-                + "எதுவும் வெளியே அனுப்பப்படாது."
-                + "</div></html>");
-        footer.setFont(Theme.uiFont(10));
-        footer.setForeground(Theme.INK_SOFT);
-        footer.setBorder(BorderFactory.createEmptyBorder(0, 18, 18, 18));
-        footer.setAlignmentX(Component.LEFT_ALIGNMENT);
-        bar.add(footer);
 
         return bar;
     }

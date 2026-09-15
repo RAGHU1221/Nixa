@@ -78,6 +78,10 @@ public class ScanPanel extends JPanel implements ToolPanel {
         addFileBtn.setFont(Theme.uiFont(13));
         addFileBtn.addActionListener(e -> onAddFileClicked());
         controls.add(addFileBtn);
+        JButton cropBtn = new JButton("Crop Image");
+        cropBtn.setFont(Theme.uiFont(13));
+        cropBtn.addActionListener(e -> onCropImage());
+        controls.add(cropBtn);
         top.add(controls);
         top.add(Box.createVerticalStrut(8));
 
@@ -291,11 +295,17 @@ public class ScanPanel extends JPanel implements ToolPanel {
 
         JPanel btnRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 0));
         btnRow.setOpaque(false);
-        JButton up = new JButton("↑");
+        JButton up = new JButton("Prev");
+        up.setPreferredSize(new Dimension(68, 34));
+        up.setFont(Theme.uiFont(12));
         up.addActionListener(e -> movePage(idx, -1));
-        JButton down = new JButton("↓");
+        JButton down = new JButton("Next");
+        down.setPreferredSize(new Dimension(68, 34));
+        down.setFont(Theme.uiFont(12));
         down.addActionListener(e -> movePage(idx, 1));
-        JButton del = new JButton("✕");
+        JButton del = new JButton("Delete");
+        del.setPreferredSize(new Dimension(76, 34));
+        del.setFont(Theme.uiFont(12));
         del.setForeground(Theme.DANGER);
         del.addActionListener(e -> deletePage(idx));
         btnRow.add(up);
@@ -318,6 +328,51 @@ public class ScanPanel extends JPanel implements ToolPanel {
     private void deletePage(int idx) {
         pages.remove(idx);
         renderPages();
+    }
+
+    private void onCropImage() {
+        if (pages.isEmpty()) {
+            app.flash("முதலில் ஒரு image அல்லது scan page சேர்க்கவும்.", StatusBar.Kind.WARN);
+            return;
+        }
+        BufferedImage current = pages.get(pages.size() - 1);
+        JTextField xField = new JTextField("0");
+        JTextField yField = new JTextField("0");
+        JTextField widthField = new JTextField(String.valueOf(current.getWidth()));
+        JTextField heightField = new JTextField(String.valueOf(current.getHeight()));
+        JPanel form = new JPanel(new GridLayout(4, 2, 8, 8));
+        form.add(new JLabel("Left (x):"));
+        form.add(xField);
+        form.add(new JLabel("Top (y):"));
+        form.add(yField);
+        form.add(new JLabel("Width:"));
+        form.add(widthField);
+        form.add(new JLabel("Height:"));
+        form.add(heightField);
+        int result = JOptionPane.showConfirmDialog(this, form, "Crop last scanned image",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (result != JOptionPane.OK_OPTION) return;
+        try {
+            int x = Integer.parseInt(xField.getText().trim());
+            int y = Integer.parseInt(yField.getText().trim());
+            int width = Integer.parseInt(widthField.getText().trim());
+            int height = Integer.parseInt(heightField.getText().trim());
+            if (x < 0 || y < 0 || width <= 0 || height <= 0
+                    || x + width > current.getWidth() || y + height > current.getHeight()) {
+                throw new IllegalArgumentException("Crop area image-க்கு வெளியே போகக்கூடாது.");
+            }
+            BufferedImage cropped = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+            Graphics2D graphics = cropped.createGraphics();
+            graphics.drawImage(current, 0, 0, width, height, x, y, x + width, y + height, null);
+            graphics.dispose();
+            pages.set(pages.size() - 1, cropped);
+            renderPages();
+            app.flash("✓ Image crop செய்யப்பட்டது.", StatusBar.Kind.OK);
+        } catch (NumberFormatException e) {
+            app.flash("Crop அளவுகள் numbers ஆக இருக்க வேண்டும்.", StatusBar.Kind.ERR);
+        } catch (IllegalArgumentException e) {
+            app.flash(e.getMessage(), StatusBar.Kind.ERR);
+        }
     }
 
     private void onGeneratePdf() {
