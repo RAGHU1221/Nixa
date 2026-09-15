@@ -38,6 +38,9 @@ public class ResizePanel extends JPanel implements ToolPanel {
     private final JTextField hEntry = new JTextField(5);
     private final JTextField kbEntry = new JTextField(5);
     private final JButton runBtn = new JButton("⚙ Resize + Compress");
+    private final JButton cropBtn = new JButton("Crop Image");
+    private final JButton scanBtn = new JButton("Scan Photo");
+    private final JButton clearBtn = new JButton("Clear Image");
     private final JLabel beforeLabel = new JLabel(" ");
     private final JLabel afterLabel = new JLabel(" ");
     private final JLabel beforeImgLabel = new JLabel();
@@ -92,14 +95,30 @@ public class ResizePanel extends JPanel implements ToolPanel {
         JPanel btnRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         btnRow.setOpaque(false);
         btnRow.setAlignmentX(Component.LEFT_ALIGNMENT);
-        JButton chooseBtn = new JButton("📁 Choose Photo");
+        JButton chooseBtn = new JButton("Choose Photo");
         chooseBtn.setFont(Theme.uiFont(13));
+        chooseBtn.setPreferredSize(new Dimension(140, 36));
         chooseBtn.addActionListener(e -> onChoose());
         runBtn.setFont(Theme.uiFont(13));
+        runBtn.setPreferredSize(new Dimension(175, 36));
         runBtn.setEnabled(false);
         runBtn.addActionListener(e -> onRun());
+        cropBtn.setFont(Theme.uiFont(13));
+        cropBtn.setPreferredSize(new Dimension(125, 36));
+        cropBtn.setEnabled(false);
+        cropBtn.addActionListener(e -> onCrop());
+        scanBtn.setFont(Theme.uiFont(13));
+        scanBtn.setPreferredSize(new Dimension(120, 36));
+        scanBtn.addActionListener(e -> onScan());
+        clearBtn.setFont(Theme.uiFont(13));
+        clearBtn.setPreferredSize(new Dimension(125, 36));
+        clearBtn.setEnabled(false);
+        clearBtn.addActionListener(e -> clearImage());
         btnRow.add(chooseBtn);
+        btnRow.add(scanBtn);
+        btnRow.add(cropBtn);
         btnRow.add(runBtn);
+        btnRow.add(clearBtn);
         top.add(btnRow);
         top.add(Box.createVerticalStrut(8));
 
@@ -166,14 +185,112 @@ public class ResizePanel extends JPanel implements ToolPanel {
             app.flash("படத்தை திறக்க முடியல்: " + e.getMessage(), StatusBar.Kind.ERR);
             return;
         }
+        showSourceImage(ImageUtil.humanSize(srcFile.length()));
+    }
+
+    private void showSourceImage(String sizeText) {
         runBtn.setEnabled(true);
-        Image thumb = srcImg.getScaledInstance(260, -1, Image.SCALE_SMOOTH);
+        cropBtn.setEnabled(true);
+        clearBtn.setEnabled(true);
+        Image thumb = srcImg.getScaledInstance(320, -1, Image.SCALE_SMOOTH);
         beforeImgLabel.setIcon(new ImageIcon(thumb));
-        beforeLabel.setText("Original — " + ImageUtil.humanSize(srcFile.length()));
+        beforeLabel.setText("Original — " + sizeText);
         afterImgLabel.setIcon(null);
         afterLabel.setText(" ");
         saveBtn.setEnabled(false);
         resultData = null;
+    }
+
+    private void onScan() {
+        scanBtn.setEnabled(false);
+        app.flash("Scanner-ல் இருந்து photo எடுக்கிறோம்...", StatusBar.Kind.INFO);
+        SwingWorker<BufferedImage, Void> worker = new SwingWorker<>() {
+            ScannerUtil.ScannerException error;
+
+            @Override
+            protected BufferedImage doInBackground() {
+                try {
+                    return com.nixatoolkit.util.ScannerUtil.scan("color", 300, "");
+                } catch (com.nixatoolkit.util.ScannerUtil.ScannerException e) {
+                    error = e;
+                    return null;
+                }
+            }
+
+            @Override
+            protected void done() {
+                scanBtn.setEnabled(true);
+                if (error != null) {
+                    app.flash(error.getMessage(), StatusBar.Kind.ERR);
+                    return;
+                }
+                try {
+                    BufferedImage image = get();
+                    if (image == null) {
+                        app.flash("Scan cancel செய்யப்பட்டது.", StatusBar.Kind.WARN);
+                        return;
+                    }
+                    srcFile = null;
+                    srcImg = ImageUtil.toRgb(image);
+                    showSourceImage(ImageUtil.humanSize(image.getWidth() * (long) image.getHeight() * 3));
+                    app.flash("✓ Scan photo ready.", StatusBar.Kind.OK);
+                } catch (Exception e) {
+                    app.flash("Scan தோல்வி: " + e.getMessage(), StatusBar.Kind.ERR);
+                }
+            }
+        };
+        worker.execute();
+    }
+
+    private void clearImage() {
+        srcFile = null;
+        srcImg = null;
+        resultData = null;
+        beforeImgLabel.setIcon(null);
+        afterImgLabel.setIcon(null);
+        beforeLabel.setText(" ");
+        afterLabel.setText(" ");
+        runBtn.setEnabled(false);
+        cropBtn.setEnabled(false);
+        clearBtn.setEnabled(false);
+        saveBtn.setEnabled(false);
+        app.flash("Image clear செய்யப்பட்டது.", StatusBar.Kind.OK);
+    }
+
+    private void onCrop() {
+        if (srcImg == null) return;
+        JTextField xField = new JTextField("0");
+        JTextField yField = new JTextField("0");
+        JTextField widthField = new JTextField(String.valueOf(srcImg.getWidth()));
+        JTextField heightField = new JTextField(String.valueOf(srcImg.getHeight()));
+        JPanel form = new JPanel(new GridLayout(4, 2, 8, 8));
+        form.add(new JLabel("Left (x):")); form.add(xField);
+        form.add(new JLabel("Top (y):")); form.add(yField);
+        form.add(new JLabel("Width:")); form.add(widthField);
+        form.add(new JLabel("Height:")); form.add(heightField);
+        int result = JOptionPane.showConfirmDialog(this, form, "Crop photo", JOptionPane.OK_CANCEL_OPTION);
+        if (result != JOptionPane.OK_OPTION) return;
+        try {
+            int x = Integer.parseInt(xField.getText().trim());
+            int y = Integer.parseInt(yField.getText().trim());
+            int width = Integer.parseInt(widthField.getText().trim());
+            int height = Integer.parseInt(heightField.getText().trim());
+            if (x < 0 || y < 0 || width <= 0 || height <= 0
+                    || x + width > srcImg.getWidth() || y + height > srcImg.getHeight()) {
+                throw new IllegalArgumentException("Crop area image-க்கு வெளியே போகக்கூடாது.");
+            }
+            BufferedImage cropped = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+            Graphics2D graphics = cropped.createGraphics();
+            graphics.drawImage(srcImg, 0, 0, width, height, x, y, x + width, y + height, null);
+            graphics.dispose();
+            srcImg = cropped;
+            showSourceImage(ImageUtil.humanSize(width * (long) height * 3));
+            app.flash("✓ Photo crop செய்யப்பட்டது.", StatusBar.Kind.OK);
+        } catch (NumberFormatException e) {
+            app.flash("Crop அளவுகள் numbers ஆக இருக்க வேண்டும்.", StatusBar.Kind.ERR);
+        } catch (IllegalArgumentException e) {
+            app.flash(e.getMessage(), StatusBar.Kind.ERR);
+        }
     }
 
     private void onRun() {
@@ -218,7 +335,7 @@ public class ResizePanel extends JPanel implements ToolPanel {
 
     private void onSave() {
         if (resultData == null) return;
-        String base = srcFile.getName();
+        String base = srcFile == null ? "scanned-photo" : srcFile.getName();
         int dot = base.lastIndexOf('.');
         if (dot > 0) base = base.substring(0, dot);
         String preset = ((String) presetMenu.getSelectedItem()).split(" ")[0].toLowerCase();
