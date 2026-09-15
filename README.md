@@ -32,7 +32,7 @@ detailed reason keezha irukku.
 | 🖼️ Image Converter | Neraya images-ah JPEG ↔ PNG-ku, batch-ah convert pannalam. |
 | 📉 Reduce File Size | Photo alladhu PDF-ah, neenga sonna KB size-ku automatic-ah compress pannum. |
 | 📐 Form Photo / Signature | Passport, Aadhaar, PAN, Signature — exact pixel size + max KB presets ready-ah irukku. |
-| 📷 Photo Import | Munnadi edutha oru photo-ah pick panni use pannalam. |
+| 📷 Photo Import | Windows camera preview-ல் photo capture pannalam, allathu existing photo pick pannalam. |
 | 🕒 Activity History | Indha computer-la mattum — evlo files process panninga nu track pannum. Veliya edhுவும் anuppadhu. |
 
 ## Run panna eppadi (3 வழி)
@@ -68,11 +68,10 @@ venam (build panna), vera edhுவும் download pannanும் illa.
 
 ## Idhula illatha oru feature (transparency-ku sollirom)
 
-- **Live webcam preview** illa — adhukku vேணும் oru external camera library
-  (namma access panna mudiyadha online library store-la irundhu vaanum).
-  Adhukku பதிலா "Photo Import" tool irukku — already edutha oru photo-ah
-  pick panni use pannalam (phone camera, existing webcam software — edhுவும்
-  use panni edutha photo venum).
+- **Photo Import camera preview** Windows WIA native camera dialog-ஐ பயன்படுத்தும்.
+  `Open Camera` அழுத்தி live preview-ல் capture செய்து, அந்த photo-ஐ app-ல்
+  preview/save செய்யலாம். Windows camera/WIA driver இல்லையென்றால் `Pick Photo`
+  மூலம் existing image-ஐ பயன்படுத்தலாம்.
 - **PDF compress**, scan pannina/photo PDF-ku mattum vela seiyum — typed-text
   (word-doc-la irundhu save pannina) PDF-la image pages illadhadhala, adhukku
   idhu vela seiyadhu.

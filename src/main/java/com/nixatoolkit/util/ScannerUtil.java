@@ -98,6 +98,18 @@ public final class ScannerUtil {
             "$image.SaveFile($OutPath)\n" +
             "exit 0\n";
 
+    private static final String CAMERA_SCRIPT =
+            "param([string]$OutPath)\n" +
+            "$ErrorActionPreference = 'Stop'\n" +
+            "try {\n" +
+            "  $dialog = New-Object -ComObject WIA.CommonDialog\n" +
+            "  $image = $dialog.ShowAcquireImage(2, 1, 65536, " +
+            "\"{B96B3CAE-0728-11D3-9D7B-0000F81EF32E}\", $false, $true)\n" +
+            "  if ($null -eq $image) { exit 2 }\n" +
+            "  $image.SaveFile($OutPath)\n" +
+            "  exit 0\n" +
+            "} catch { Write-Error \"$_\"; exit 1 }\n";
+
     private static Path writeScript() throws IOException {
         Path script = Files.createTempFile("nixa_wia_", ".ps1");
         Files.writeString(script, WIA_SCRIPT, StandardCharsets.UTF_8);
@@ -131,6 +143,49 @@ public final class ScannerUtil {
     /** Returns null if the user cancelled the scan dialog. */
     public static BufferedImage scan(String intent) throws ScannerException {
         return scan(intent, 300, "");
+    }
+
+    /** Opens the native Windows WIA camera acquisition dialog with live preview. */
+    public static BufferedImage captureCamera() throws ScannerException {
+        Path script;
+        Path outFile;
+        try {
+            script = Files.createTempFile("nixa_camera_", ".ps1");
+            Files.writeString(script, CAMERA_SCRIPT, StandardCharsets.UTF_8);
+            outFile = Files.createTempFile("nixa_camera_", ".jpg");
+            Files.deleteIfExists(outFile);
+        } catch (IOException e) {
+            throw new ScannerException("Camera temp file உருவாக்க முடியல்: " + e.getMessage());
+        }
+        try {
+            Process process = new ProcessBuilder("powershell", "-NoProfile", "-ExecutionPolicy", "Bypass",
+                    "-File", script.toString(), "-OutPath", outFile.toString())
+                    .redirectErrorStream(true).start();
+            String output;
+            try (var reader = process.inputReader(StandardCharsets.UTF_8)) {
+                StringBuilder buffer = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) buffer.append(line).append('\n');
+                output = buffer.toString();
+            }
+            process.waitFor(120, TimeUnit.SECONDS);
+            if (process.exitValue() == 2) return null;
+            if (process.exitValue() != 0) {
+                throw new ScannerException("Windows Camera திறக்க முடியவில்லை" +
+                        (output.isBlank() ? "" : ": " + output.trim()));
+            }
+            BufferedImage image = ImageIO.read(outFile.toFile());
+            if (image == null) throw new IOException("Camera image readable இல்லை");
+            return image;
+        } catch (IOException e) {
+            throw new ScannerException("Windows camera support கிடைக்கவில்லை: " + e.getMessage());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new ScannerException("Camera capture interrupt ஆச்சு.");
+        } finally {
+            try { Files.deleteIfExists(script); } catch (IOException ignored) { }
+            try { Files.deleteIfExists(outFile); } catch (IOException ignored) { }
+        }
     }
 
     /** Scans from the selected WIA device at the requested resolution. */

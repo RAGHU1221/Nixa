@@ -4,6 +4,7 @@ import com.nixatoolkit.App;
 import com.nixatoolkit.Theme;
 import com.nixatoolkit.util.HistoryStore;
 import com.nixatoolkit.util.ImageUtil;
+import com.nixatoolkit.util.ScannerUtil;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -41,9 +42,8 @@ public class CapturePanel extends JPanel implements ToolPanel {
         header.setAlignmentX(Component.LEFT_ALIGNMENT);
         top.add(header);
 
-        JLabel note = new JLabel("<html><div style='width:820px'>Live webcam preview இந்த Java build-ல் "
-                + "கிடைக்கல் (அதற்கான library internet restriction-ஆல் add பண்ண முடியல்) — பதிலா ஏற்கனவே "
-                + "phone/webcam software மூலம் எடுத்த ஒரு photo-ஐ இங்க pick பண்ணி பயன்படுத்தலாம்.</div></html>");
+        JLabel note = new JLabel("<html><div style='width:820px'>Open Camera அழுத்தினால் Windows camera preview திறக்கும். "
+            + "Capture செய்த image இங்கே preview ஆகும்; file photo-வும் தேர்வு செய்யலாம்.</div></html>");
         note.setFont(Theme.uiFont(11));
         note.setForeground(Theme.WARN);
         note.setOpaque(true);
@@ -69,10 +69,14 @@ public class CapturePanel extends JPanel implements ToolPanel {
         JButton pickBtn = new JButton("Pick Photo");
         pickBtn.setFont(Theme.uiFont(13));
         pickBtn.addActionListener(e -> onPick());
+        JButton cameraBtn = new JButton("Open Camera");
+        cameraBtn.setFont(Theme.uiFont(13));
+        cameraBtn.addActionListener(e -> onCamera(cameraBtn));
         saveBtn.setFont(Theme.uiFont(13));
         saveBtn.setEnabled(false);
         saveBtn.addActionListener(e -> onSave());
         btnRow.add(pickBtn);
+        btnRow.add(cameraBtn);
         btnRow.add(saveBtn);
         top.add(btnRow);
 
@@ -81,6 +85,49 @@ public class CapturePanel extends JPanel implements ToolPanel {
         scroll.setOpaque(false);
         scroll.getViewport().setOpaque(false);
         add(scroll, BorderLayout.CENTER);
+    }
+
+    private void onCamera(JButton cameraBtn) {
+        cameraBtn.setEnabled(false);
+        app.flash("Windows camera preview திறக்கிறது...", StatusBar.Kind.INFO);
+        SwingWorker<BufferedImage, Void> worker = new SwingWorker<>() {
+            ScannerUtil.ScannerException error;
+
+            @Override
+            protected BufferedImage doInBackground() {
+                try {
+                    return ScannerUtil.captureCamera();
+                } catch (ScannerUtil.ScannerException e) {
+                    error = e;
+                    return null;
+                }
+            }
+
+            @Override
+            protected void done() {
+                cameraBtn.setEnabled(true);
+                if (error != null) {
+                    app.flash(error.getMessage(), StatusBar.Kind.ERR);
+                    return;
+                }
+                try {
+                    BufferedImage captured = get();
+                    if (captured == null) {
+                        app.flash("Camera capture cancel செய்யப்பட்டது.", StatusBar.Kind.WARN);
+                        return;
+                    }
+                    photo = ImageUtil.toRgb(captured);
+                    Image thumb = photo.getScaledInstance(-1, 300, Image.SCALE_SMOOTH);
+                    previewLabel.setIcon(new ImageIcon(thumb));
+                    previewLabel.setText(null);
+                    saveBtn.setEnabled(true);
+                    app.flash("Camera photo ready.", StatusBar.Kind.OK);
+                } catch (Exception e) {
+                    app.flash("Camera image load தோல்வி: " + e.getMessage(), StatusBar.Kind.ERR);
+                }
+            }
+        };
+        worker.execute();
     }
 
     private void onPick() {
