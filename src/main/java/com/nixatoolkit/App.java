@@ -27,7 +27,7 @@ import java.util.Map;
  * see README.md for why.
  */
 public class App extends JFrame {
-    public static final String APP_VERSION = "1.0.3";
+    public static final String APP_VERSION = "1.0.4";
 
     private final Map<String, JComponent> panels = new LinkedHashMap<>();
     private final Map<String, JButton> navButtons = new LinkedHashMap<>();
@@ -39,6 +39,7 @@ public class App extends JFrame {
     private static final String[][] NAV_ITEMS = {
             {"home", "", "முகப்பு / Home"},
             {"scan", "", "Scan → PDF"},
+            {"pdf-tools", "", "PDF Tools"},
             {"convert", "", "Image Converter"},
             {"compress", "", "Reduce File Size"},
             {"resize", "", "Form Photo / Signature"},
@@ -74,6 +75,7 @@ public class App extends JFrame {
 
         registerPanel("home", new HomePanel(this));
         registerPanel("scan", new ScanPanel(this));
+        registerPanel("pdf-tools", new PdfToolsPanel(this));
         registerPanel("convert", new ConvertPanel(this));
         registerPanel("compress", new CompressPanel(this));
         registerPanel("resize", new ResizePanel(this));
