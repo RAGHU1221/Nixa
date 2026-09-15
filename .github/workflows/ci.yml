@@ -1,0 +1,47 @@
+name: Build and test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Compile application and tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf out dist
+          mkdir -p out dist
+          find src/main/java -name '*.java' -print > sources.txt
+          javac -encoding UTF-8 -d out @sources.txt
+          javac -encoding UTF-8 -d out -cp out tools/TestHarness.java
+
+      - name: Run automated tests
+        run: java -Djava.awt.headless=true -cp out com.nixatoolkit.ui.TestHarness
+
+      - name: Build runnable JAR
+        run: jar --create --file dist/NixaToolkit.jar --main-class com.nixatoolkit.App -C out .
+
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nixa-toolkit-jar
+          path: dist/NixaToolkit.jar
