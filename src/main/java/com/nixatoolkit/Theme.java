@@ -35,24 +35,24 @@ public final class Theme {
     private Theme() {
     }
 
-    public static final Color BG = new Color(0x1C, 0x29, 0x38);
-    public static final Color SURFACE = new Color(0x25, 0x36, 0x49);
-    public static final Color SURFACE_2 = new Color(0x2D, 0x43, 0x59);
-    public static final Color LINE = new Color(0x3C, 0x58, 0x70);
-    public static final Color INK = new Color(0xE8, 0xF4, 0xFB);
-    public static final Color INK_SOFT = new Color(0xA8, 0xBC, 0xCD);
-    public static final Color TEAL = new Color(0x18, 0xB9, 0xEF);
-    public static final Color TEAL_HOVER = new Color(0x48, 0xD5, 0xFF);
-    public static final Color MARIGOLD = new Color(0x18, 0xB9, 0xEF);
-    public static final Color MARIGOLD_HOVER = new Color(0x48, 0xD5, 0xFF);
-    public static final Color BUTTON_ORANGE = new Color(0x18, 0xB9, 0xEF);
-    public static final Color BUTTON_ORANGE_LIGHT = new Color(0x5A, 0xDB, 0xFF);
+    public static final Color BG = new Color(0xF3, 0xF5, 0xF7);
+    public static final Color SURFACE = new Color(0xFF, 0xFF, 0xFF);
+    public static final Color SURFACE_2 = new Color(0xE8, 0xED, 0xF2);
+    public static final Color LINE = new Color(0xD1, 0xD9, 0xE1);
+    public static final Color INK = new Color(0x1F, 0x2D, 0x3D);
+    public static final Color INK_SOFT = new Color(0x5D, 0x6B, 0x78);
+    public static final Color TEAL = new Color(0x00, 0x67, 0xC0);
+    public static final Color TEAL_HOVER = new Color(0x00, 0x56, 0xA6);
+    public static final Color MARIGOLD = new Color(0xD9, 0x8A, 0x00);
+    public static final Color MARIGOLD_HOVER = new Color(0xB7, 0x70, 0x00);
+    public static final Color BUTTON_ORANGE = new Color(0x00, 0x67, 0xC0);
+    public static final Color BUTTON_ORANGE_LIGHT = new Color(0x00, 0x56, 0xA6);
     public static final Color SUCCESS = new Color(0x1C, 0x7D, 0x4D);
     public static final Color SUCCESS_BG = new Color(0xE0, 0xF2, 0xE6);
     public static final Color WARN = new Color(0xA3, 0x62, 0x0B);
-    public static final Color WARN_BG = new Color(0x4A, 0x3D, 0x27);
-    public static final Color DANGER = new Color(0xFF, 0x76, 0x78);
-    public static final Color DANGER_BG = new Color(0x52, 0x2E, 0x3A);
+    public static final Color WARN_BG = new Color(0xFF, 0xF4, 0xD6);
+    public static final Color DANGER = new Color(0xC4, 0x2B, 0x2B);
+    public static final Color DANGER_BG = new Color(0xFD, 0xE8, 0xE8);
 
     private static final List<String> TAMIL_FONT_CANDIDATES = Arrays.asList(
             "Nirmala UI", "Vijaya", "Latha", "Noto Sans Tamil", "Kavivanar", "Arial Unicode MS");
@@ -141,15 +141,20 @@ public final class Theme {
     private static void styleButton(JButton button) {
         String text = button.getText() == null ? "" : button.getText().toLowerCase();
         boolean danger = text.contains("delete") || text.contains("remove") || text.contains("clear");
+        boolean primary = text.contains("save") || text.contains("create") || text.contains("compress")
+            || text.contains("convert") || text.contains("scan") || text.contains("start")
+            || text.contains("merge") || text.contains("split") || text.contains("extract");
         button.setFont(uiFont(Font.PLAIN, 13));
         button.setFocusPainted(false);
-        button.setOpaque(false);
-        button.setContentAreaFilled(false);
+        button.setOpaque(true);
+        button.setContentAreaFilled(true);
         button.setRolloverEnabled(true);
-        button.setBorder(BorderFactory.createEmptyBorder(8, 18, 8, 18));
+        button.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(danger ? DANGER : (primary ? TEAL : LINE)),
+            BorderFactory.createEmptyBorder(6, 12, 6, 12)));
         button.setMargin(new java.awt.Insets(0, 0, 0, 0));
-        button.setBackground(danger ? DANGER : BUTTON_ORANGE);
-        button.setForeground(danger ? Color.WHITE : new Color(0x20, 0x18, 0x0C));
+        button.setBackground(danger ? DANGER_BG : (primary ? TEAL : SURFACE));
+        button.setForeground(danger ? DANGER : (primary ? Color.WHITE : INK));
         button.setUI(new GlassButtonUI());
     }
 
@@ -162,28 +167,34 @@ public final class Theme {
                     java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
             int width = button.getWidth();
             int height = button.getHeight();
-            int radius = Math.max(16, height - 4);
+            int radius = 6;
             boolean danger = button.getText() != null
                     && (button.getText().toLowerCase().contains("delete")
                     || button.getText().toLowerCase().contains("remove")
                     || button.getText().toLowerCase().contains("clear"));
             boolean cyan = "cyan".equals(button.getClientProperty("buttonTone"));
-            Color base = cyan ? BUTTON_ORANGE
-                    : (danger ? new Color(0xD9, 0x4A, 0x3A) : BUTTON_ORANGE);
-            Color highlight = cyan ? BUTTON_ORANGE_LIGHT
-                    : (danger ? new Color(0xF1, 0x76, 0x66) : BUTTON_ORANGE_LIGHT);
+                boolean primary = button.getText() != null && (button.getText().toLowerCase().contains("save")
+                    || button.getText().toLowerCase().contains("create")
+                    || button.getText().toLowerCase().contains("compress")
+                    || button.getText().toLowerCase().contains("convert")
+                    || button.getText().toLowerCase().contains("scan")
+                    || button.getText().toLowerCase().contains("merge")
+                    || button.getText().toLowerCase().contains("split")
+                    || button.getText().toLowerCase().contains("extract"));
+                Color base = danger ? DANGER_BG : (cyan || primary ? BUTTON_ORANGE : SURFACE);
+                Color highlight = danger ? DANGER_BG : (cyan || primary ? BUTTON_ORANGE_LIGHT : SURFACE_2);
             if (!button.isEnabled()) {
                 base = new Color(0xB8, 0xB8, 0xB8);
                 highlight = new Color(0xD8, 0xD8, 0xD8);
             } else if (button.getModel().isRollover()) {
                 base = highlight;
             }
-            g.setColor(new Color(0, 0, 0, 45));
-            g.fillRoundRect(2, 3, Math.max(0, width - 3), Math.max(0, height - 2), radius, radius);
-            g.setPaint(new java.awt.GradientPaint(0, 0, highlight, 0, height, base));
-            g.fillRoundRect(0, 0, Math.max(0, width - 4), Math.max(0, height - 4), radius, radius);
-            g.setColor(new Color(255, 255, 255, 105));
-            g.drawRoundRect(1, 1, Math.max(0, width - 6), Math.max(0, height / 2), radius, radius);
+            g.setColor(base);
+            g.fillRoundRect(0, 0, Math.max(0, width - 1), Math.max(0, height - 1), radius, radius);
+            if (button.getModel().isRollover()) {
+                g.setColor(highlight);
+                g.fillRoundRect(1, 1, Math.max(0, width - 3), Math.max(0, height - 3), radius, radius);
+            }
             g.dispose();
             super.paint(graphics, component);
         }

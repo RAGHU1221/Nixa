@@ -51,8 +51,6 @@ public class PdfToolsPanel extends JPanel implements ToolPanel {
             () -> openOperation(PdfOperationDialog.Operation.MERGE_PDFS)));
         tools.add(toolCard("Extract PDF Pages", "Export scanned pages as JPG images.", "Extract Pages",
             () -> openOperation(PdfOperationDialog.Operation.EXTRACT_PAGES)));
-        tools.add(toolCard("PDF to JPG", "Export every scanned PDF page as an image.", "Convert Pages",
-            () -> openOperation(PdfOperationDialog.Operation.EXTRACT_PAGES)));
         tools.add(toolCard("Split PDF", "Create one PDF file for every scanned page.", "Split PDF",
             () -> openOperation(PdfOperationDialog.Operation.SPLIT_PDF)));
         tools.add(toolCard("PDF Info", "Check page count and image-page support.", "Check PDF",

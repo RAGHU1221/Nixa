@@ -59,6 +59,29 @@ public class PdfOperationDialog extends JDialog {
         fileList.setBackground(Theme.SURFACE);
         fileList.setForeground(Theme.INK);
         fileList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        fileList.setTransferHandler(new TransferHandler() {
+            @Override
+            public boolean canImport(TransferSupport support) {
+                return support.isDataFlavorSupported(java.awt.datatransfer.DataFlavor.javaFileListFlavor);
+            }
+
+            @Override
+            public boolean importData(TransferSupport support) {
+                if (!canImport(support)) return false;
+                try {
+                    @SuppressWarnings("unchecked")
+                    List<File> dropped = (List<File>) support.getTransferable().getTransferData(
+                            java.awt.datatransfer.DataFlavor.javaFileListFlavor);
+                    for (File file : dropped) {
+                        if (isAccepted(file) && !contains(file)) files.addElement(file);
+                    }
+                    if (files.size() > 0) fileList.setSelectedIndex(files.size() - 1);
+                    return true;
+                } catch (Exception ignored) {
+                    return false;
+                }
+            }
+        });
         fileList.setCellRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index,
@@ -91,6 +114,10 @@ public class PdfOperationDialog extends JDialog {
         add.addActionListener(e -> addFiles());
         JButton remove = new JButton("Remove Selected");
         remove.addActionListener(e -> removeSelected());
+        JButton up = new JButton("Move Up");
+        up.addActionListener(e -> moveSelected(-1));
+        JButton down = new JButton("Move Down");
+        down.addActionListener(e -> moveSelected(1));
         JButton clear = new JButton("Clear All");
         clear.addActionListener(e -> files.clear());
         JButton run = new JButton(operationTitle(operation));
@@ -101,6 +128,8 @@ public class PdfOperationDialog extends JDialog {
         actions.setOpaque(false);
         actions.add(add);
         actions.add(remove);
+        actions.add(up);
+        actions.add(down);
         actions.add(clear);
         actions.add(run);
         actions.add(close);
@@ -116,7 +145,7 @@ public class PdfOperationDialog extends JDialog {
                 operation == Operation.IMAGES_TO_PDF ? new String[]{"jpg", "jpeg", "png", "bmp", "tif", "tiff"} : new String[]{"pdf"}));
         if (chooser.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) return;
         for (File file : chooser.getSelectedFiles()) {
-            if (!contains(file)) files.addElement(file);
+            if (isAccepted(file) && !contains(file)) files.addElement(file);
         }
         if (files.size() > 0) fileList.setSelectedIndex(files.size() - 1);
     }
@@ -126,11 +155,29 @@ public class PdfOperationDialog extends JDialog {
         return false;
     }
 
+    private boolean isAccepted(File file) {
+        String name = file.getName().toLowerCase();
+        if (operation == Operation.IMAGES_TO_PDF) {
+            return name.endsWith(".jpg") || name.endsWith(".jpeg") || name.endsWith(".png")
+                    || name.endsWith(".bmp") || name.endsWith(".tif") || name.endsWith(".tiff");
+        }
+        return name.endsWith(".pdf");
+    }
+
     private void removeSelected() {
         int[] selected = fileList.getSelectedIndices();
         for (int i = selected.length - 1; i >= 0; i--) files.remove(selected[i]);
         preview.setIcon(null);
         preview.setText("Select a document to preview");
+    }
+
+    private void moveSelected(int direction) {
+        int index = fileList.getSelectedIndex();
+        int target = index + direction;
+        if (index < 0 || target < 0 || target >= files.size()) return;
+        File current = files.remove(index);
+        files.add(target, current);
+        fileList.setSelectedIndex(target);
     }
 
     private void showSelectedPreview() {

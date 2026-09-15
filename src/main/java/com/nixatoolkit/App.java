@@ -27,13 +27,14 @@ import java.util.Map;
  * see README.md for why.
  */
 public class App extends JFrame {
-    public static final String APP_VERSION = "1.0.11";
+    public static final String APP_VERSION = "1.0.12";
 
     private final Map<String, JComponent> panels = new LinkedHashMap<>();
     private final Map<String, JButton> navButtons = new LinkedHashMap<>();
     private final CardLayout cardLayout = new CardLayout();
     private final JPanel content = new JPanel(cardLayout);
     private final StatusBar status = new StatusBar();
+    private final JLabel breadcrumb = new JLabel("Home");
     private Map<String, Object> settings;
 
     private static final String[][] NAV_ITEMS = {
@@ -59,9 +60,10 @@ public class App extends JFrame {
         buildMenuBar();
 
         JPanel sidebar = buildSidebar();
-        Theme.styleButtons(sidebar);
         styleNavigationButtons();
         add(sidebar, BorderLayout.WEST);
+
+        add(buildWorkspaceHeader(), BorderLayout.NORTH);
 
         content.setBorder(BorderFactory.createEmptyBorder(18, 18, 0, 18));
         content.setBackground(Theme.BG);
@@ -70,6 +72,8 @@ public class App extends JFrame {
         JPanel statusWrap = new JPanel(new BorderLayout());
         statusWrap.setBackground(Theme.BG);
         statusWrap.setBorder(BorderFactory.createEmptyBorder(8, 18, 12, 18));
+        status.show("Ready  |  Java " + System.getProperty("java.version") + "  |  "
+            + System.getProperty("os.name"), StatusBar.Kind.INFO);
         statusWrap.add(status, BorderLayout.CENTER);
         add(statusWrap, BorderLayout.SOUTH);
 
@@ -124,6 +128,13 @@ public class App extends JFrame {
         JMenuBar bar = new JMenuBar();
 
         JMenu fileMenu = new JMenu("File");
+        JMenuItem openFile = new JMenuItem("Open File...");
+        openFile.setAccelerator(KeyStroke.getKeyStroke("control O"));
+        fileMenu.add(openFile);
+        JMenuItem openFolder = new JMenuItem("Open Folder...");
+        openFolder.setAccelerator(KeyStroke.getKeyStroke("control shift O"));
+        fileMenu.add(openFolder);
+        fileMenu.addSeparator();
         JMenuItem exit = new JMenuItem("Exit / வெளியேறு");
         exit.addActionListener(e -> {
             saveWindowGeometry();
@@ -141,6 +152,15 @@ public class App extends JFrame {
         }
         bar.add(toolsMenu);
 
+        JMenu settingsMenu = new JMenu("Settings");
+        JMenuItem history = new JMenuItem("Activity History");
+        history.addActionListener(e -> showPanel("history"));
+        settingsMenu.add(history);
+        JMenuItem output = new JMenuItem("Output Folder...");
+        output.addActionListener(e -> chooseOutputFolder());
+        settingsMenu.add(output);
+        bar.add(settingsMenu);
+
         JMenu helpMenu = new JMenu("Help");
         JMenuItem about = new JMenuItem("About Nixa Toolkit");
         about.addActionListener(e -> showAbout());
@@ -148,6 +168,43 @@ public class App extends JFrame {
         bar.add(helpMenu);
 
         setJMenuBar(bar);
+    }
+
+    private JPanel buildWorkspaceHeader() {
+        JPanel header = new JPanel(new BorderLayout(12, 6));
+        header.setBackground(Theme.SURFACE);
+        header.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0, 0, 1, 0, Theme.LINE),
+                BorderFactory.createEmptyBorder(8, 14, 8, 14)));
+        JPanel tools = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        tools.setOpaque(false);
+        JButton home = new JButton("Home");
+        home.addActionListener(e -> showPanel("home"));
+        JTextField search = new JTextField(22);
+        search.setToolTipText("Search tools");
+        search.putClientProperty("JTextField.placeholderText", "Search tools...");
+        tools.add(home);
+        tools.add(search);
+        JButton settingsButton = new JButton("Settings");
+        settingsButton.addActionListener(e -> chooseOutputFolder());
+        tools.add(settingsButton);
+        header.add(tools, BorderLayout.NORTH);
+        breadcrumb.setFont(Theme.uiFont(Font.PLAIN, 12));
+        breadcrumb.setForeground(Theme.INK_SOFT);
+        header.add(breadcrumb, BorderLayout.SOUTH);
+        Theme.styleButtons(header);
+        Theme.styleControls(header);
+        return header;
+    }
+
+    private void chooseOutputFolder() {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            settings.put("outputFolder", chooser.getSelectedFile().getAbsolutePath());
+            HistoryStore.saveSettings(settings);
+            status.show("Output folder: " + chooser.getSelectedFile().getAbsolutePath(), StatusBar.Kind.OK);
+        }
     }
 
     private void showAbout() {
@@ -164,7 +221,7 @@ public class App extends JFrame {
     private JPanel buildSidebar() {
         JPanel bar = new JPanel();
         bar.setLayout(new BoxLayout(bar, BoxLayout.Y_AXIS));
-        bar.setBackground(Theme.SURFACE);
+        bar.setBackground(new Color(0x24, 0x35, 0x49));
         bar.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, Theme.LINE));
         bar.setPreferredSize(new Dimension(220, 0));
         bar.setMaximumSize(new Dimension(220, Integer.MAX_VALUE));
@@ -176,6 +233,7 @@ public class App extends JFrame {
         brand.setAlignmentX(Component.LEFT_ALIGNMENT);
         JLabel brandIcon = new JLabel("Nixa Toolkit");
         brandIcon.setFont(Theme.uiFont(Font.BOLD, 16));
+        brandIcon.setForeground(Color.WHITE);
         brandIcon.setAlignmentX(Component.LEFT_ALIGNMENT);
         JLabel brandSub = new JLabel("CSC Desktop (Java) · v" + APP_VERSION);
         brandSub.setFont(Theme.uiFont(11));
@@ -193,6 +251,7 @@ public class App extends JFrame {
             btn.setFont(Theme.uiFont(13));
             btn.setFocusPainted(false);
             btn.setBackground(Theme.SURFACE);
+            btn.setForeground(Color.WHITE);
             btn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 44));
             btn.setAlignmentX(Component.LEFT_ALIGNMENT);
             btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -215,10 +274,13 @@ public class App extends JFrame {
     public void showPanel(String key) {
         for (Map.Entry<String, JButton> e : navButtons.entrySet()) {
             boolean active = e.getKey().equals(key);
-            e.getValue().setBackground(active ? Theme.TEAL : Theme.SURFACE);
-            e.getValue().setForeground(active ? Color.WHITE : Theme.INK);
+            e.getValue().setBackground(active ? Theme.TEAL : new Color(0x24, 0x35, 0x49));
+            e.getValue().setForeground(Color.WHITE);
         }
         cardLayout.show(content, key);
+        String label = "Home";
+        for (String[] item : NAV_ITEMS) if (item[0].equals(key)) label = item[2];
+        breadcrumb.setText("Home  >  " + label);
         JComponent panel = panels.get(key);
         if (panel instanceof ToolPanel) {
             ((ToolPanel) panel).onShow();
@@ -229,8 +291,8 @@ public class App extends JFrame {
         for (JButton button : navButtons.values()) {
             button.setBorder(BorderFactory.createEmptyBorder(9, 16, 9, 16));
             button.setFont(Theme.uiFont(Font.PLAIN, 13));
-            button.setForeground(Theme.INK);
-            button.setBackground(Theme.SURFACE);
+            button.setForeground(Color.WHITE);
+            button.setBackground(new Color(0x24, 0x35, 0x49));
         }
     }
 

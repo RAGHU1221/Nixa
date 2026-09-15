@@ -6,15 +6,22 @@ import com.nixatoolkit.util.HistoryStore;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import javax.swing.table.DefaultTableModel;
 
 public class HistoryPanel extends JPanel implements ToolPanel {
     private final App app;
     private final JLabel countLabel = new JLabel("");
-    private final JPanel listPanel = new JPanel();
+    private final DefaultTableModel tableModel = new DefaultTableModel(
+            new Object[]{"#", "File Name", "Operation", "Size", "Date & Time", "Status"}, 0) {
+        @Override
+        public boolean isCellEditable(int row, int column) {
+            return false;
+        }
+    };
+    private final JTable activityTable = new JTable(tableModel);
 
     private static final Map<String, String[]> KIND_LABELS = new LinkedHashMap<>();
     static {
@@ -65,10 +72,28 @@ public class HistoryPanel extends JPanel implements ToolPanel {
         top.add(topRow);
         top.add(Box.createVerticalStrut(10));
 
-        listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
-        listPanel.setOpaque(false);
-        listPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        top.add(listPanel);
+        activityTable.setRowHeight(30);
+        activityTable.setBackground(Theme.SURFACE);
+        activityTable.setForeground(Theme.INK);
+        activityTable.setSelectionBackground(Theme.SURFACE_2);
+        activityTable.setSelectionForeground(Theme.INK);
+        activityTable.getTableHeader().setBackground(Theme.SURFACE_2);
+        activityTable.getTableHeader().setForeground(Theme.INK);
+        activityTable.getColumnModel().getColumn(0).setPreferredWidth(40);
+        activityTable.getColumnModel().getColumn(1).setPreferredWidth(260);
+        activityTable.getColumnModel().getColumn(2).setPreferredWidth(120);
+        activityTable.getColumnModel().getColumn(3).setPreferredWidth(140);
+        activityTable.getColumnModel().getColumn(4).setPreferredWidth(150);
+        activityTable.getColumnModel().getColumn(5).setPreferredWidth(100);
+        activityTable.setShowGrid(false);
+        activityTable.setIntercellSpacing(new Dimension(0, 1));
+        activityTable.setFillsViewportHeight(true);
+        activityTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        activityTable.getTableHeader().setReorderingAllowed(false);
+        JScrollPane tableScroll = new JScrollPane(activityTable);
+        tableScroll.setBorder(BorderFactory.createLineBorder(Theme.LINE));
+        tableScroll.setAlignmentX(Component.LEFT_ALIGNMENT);
+        top.add(tableScroll);
 
         JScrollPane scroll = new JScrollPane(top);
         scroll.setBorder(null);
@@ -89,27 +114,20 @@ public class HistoryPanel extends JPanel implements ToolPanel {
     }
 
     private void render() {
-        listPanel.removeAll();
         List<HistoryStore.Entry> history = HistoryStore.loadHistory();
-        Collections.reverse(history);
+        java.util.Collections.reverse(history);
+        tableModel.setRowCount(0);
         countLabel.setText("மொத்தம் · Total (" + history.size() + ")");
 
-        if (history.isEmpty()) {
-            JLabel empty = new JLabel("<html><div style='width:600px'>இன்னும் எந்த செயல்பாடும் இல்லை. "
-                    + "Scan / Convert / Compress / Resize / Capture tool-களை பயன்படுத்தினா, "
-                    + "அது இங்க பட்டியலா தெரியும்.</div></html>");
-            empty.setFont(Theme.uiFont(12));
-            empty.setForeground(Theme.INK_SOFT);
-            empty.setAlignmentX(Component.LEFT_ALIGNMENT);
-            listPanel.add(empty);
-        } else {
-            for (HistoryStore.Entry entry : history) {
-                listPanel.add(historyRow(entry));
-                listPanel.add(Box.createVerticalStrut(4));
-            }
+        int row = 1;
+        for (HistoryStore.Entry entry : history) {
+            String detail = entry.detail == null ? "" : entry.detail;
+            String fileName = detail.contains(" -> ") ? detail.substring(0, detail.indexOf(" -> ")) : detail;
+            String size = detail.contains("(") ? detail.substring(detail.lastIndexOf('(') + 1).replace(")", "") : "-";
+            tableModel.addRow(new Object[]{row++, fileName, shortLabel(entry.kind), size, entry.ts, "Completed"});
         }
-        listPanel.revalidate();
-        listPanel.repaint();
+        activityTable.revalidate();
+        activityTable.repaint();
     }
 
     private JPanel historyRow(HistoryStore.Entry entry) {
