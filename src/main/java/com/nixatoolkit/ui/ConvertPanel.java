@@ -75,9 +75,9 @@ public class ConvertPanel extends JPanel implements ToolPanel {
         JPanel listTop = new JPanel(new BorderLayout());
         listTop.setOpaque(false);
         listTop.setAlignmentX(Component.LEFT_ALIGNMENT);
-        listTop.setMaximumSize(new Dimension(Integer.MAX_VALUE, 34));
+        listTop.setMaximumSize(new Dimension(Integer.MAX_VALUE, 80));
         countLabel.setFont(Theme.uiFont(Font.BOLD, 13));
-        JPanel btnBox = new JPanel(new WrapLayout(FlowLayout.RIGHT, 4, 0));
+        JPanel btnBox = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 4));
         btnBox.setOpaque(false);
         JButton clearBtn = new JButton("Clear");
         clearBtn.setPreferredSize(new Dimension(82, 34));

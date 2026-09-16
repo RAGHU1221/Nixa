@@ -88,7 +88,7 @@ public class ScanPanel extends JPanel implements ToolPanel {
         JPanel listTop = new JPanel(new BorderLayout());
         listTop.setOpaque(false);
         listTop.setAlignmentX(Component.LEFT_ALIGNMENT);
-        listTop.setMaximumSize(new Dimension(Integer.MAX_VALUE, 34));
+        listTop.setMaximumSize(new Dimension(Integer.MAX_VALUE, 80));
         countLabel.setFont(Theme.uiFont(Font.BOLD, 13));
         saveImageBtn.setFont(Theme.uiFont(13));
         saveImageBtn.setEnabled(false);
@@ -97,7 +97,7 @@ public class ScanPanel extends JPanel implements ToolPanel {
         savePdfBtn.setEnabled(false);
         savePdfBtn.addActionListener(e -> onGeneratePdf());
         listTop.add(countLabel, BorderLayout.WEST);
-        JPanel saveButtons = new JPanel(new WrapLayout(FlowLayout.RIGHT, 6, 0));
+        JPanel saveButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 4));
         saveButtons.setOpaque(false);
         saveButtons.add(saveImageBtn);
         saveButtons.add(savePdfBtn);

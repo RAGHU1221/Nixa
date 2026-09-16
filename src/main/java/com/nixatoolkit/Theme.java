@@ -177,6 +177,17 @@ public final class Theme {
 
     private static final class GlassButtonUI extends BasicButtonUI {
         @Override
+        public void update(java.awt.Graphics graphics, JComponent component) {
+            // Skip the default opaque square fill (button.getBackground()
+            // painted edge-to-edge) that ComponentUI#update() would do
+            // before paint() runs - it left square corners of that fill
+            // color peeking out past our rounded corners, showing up as a
+            // thin white/colored border-like edge around every button.
+            // paint() below fully covers the button's visible shape itself.
+            paint(graphics, component);
+        }
+
+        @Override
         public void paint(java.awt.Graphics graphics, JComponent component) {
             AbstractButton button = (AbstractButton) component;
             java.awt.Graphics2D g = (java.awt.Graphics2D) graphics.create();
