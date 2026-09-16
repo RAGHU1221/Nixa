@@ -77,7 +77,7 @@ public class ConvertPanel extends JPanel implements ToolPanel {
         listTop.setAlignmentX(Component.LEFT_ALIGNMENT);
         listTop.setMaximumSize(new Dimension(Integer.MAX_VALUE, 34));
         countLabel.setFont(Theme.uiFont(Font.BOLD, 13));
-        JPanel btnBox = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 0));
+        JPanel btnBox = new JPanel(new WrapLayout(FlowLayout.RIGHT, 4, 0));
         btnBox.setOpaque(false);
         JButton clearBtn = new JButton("Clear");
         clearBtn.setPreferredSize(new Dimension(82, 34));
@@ -192,7 +192,7 @@ public class ConvertPanel extends JPanel implements ToolPanel {
         String fmt = (String) formatMenu.getSelectedItem();
         int quality = qualitySlider.getValue();
         convertBtn.setEnabled(false);
-        convertBtn.setText("⚙ Converting...");
+        convertBtn.setText("Converting...");
 
         SwingWorker<int[], Void> worker = new SwingWorker<>() {
             @Override
@@ -203,7 +203,7 @@ public class ConvertPanel extends JPanel implements ToolPanel {
             @Override
             protected void done() {
                 convertBtn.setEnabled(true);
-                convertBtn.setText("⚙ Convert All → Save to Folder");
+                convertBtn.setText("Convert All → Save to Folder");
                 try {
                     int[] r = get();
                     reportConvertResult(r, outDir, fmt);

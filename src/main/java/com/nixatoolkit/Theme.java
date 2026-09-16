@@ -2,6 +2,7 @@ package com.nixatoolkit;
 
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.FlowLayout;
 import java.awt.GraphicsEnvironment;
 import java.awt.Container;
 import javax.swing.BorderFactory;
@@ -82,6 +83,21 @@ public final class Theme {
 
     public static Font uiFont(int size) {
         return uiFont(Font.PLAIN, size);
+    }
+
+    /**
+     * Groups a label with the control(s) it describes (e.g. "DPI:" + a
+     * combo box) into one small, non-opaque panel, so that a wrapping
+     * {@link com.nixatoolkit.ui.WrapLayout} row never splits a label from
+     * its field onto two different lines.
+     */
+    public static JPanel pair(java.awt.Component... components) {
+        JPanel group = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        group.setOpaque(false);
+        for (java.awt.Component component : components) {
+            group.add(component);
+        }
+        return group;
     }
 
     /** Applies the compact outlined/primary button language used across the app. */

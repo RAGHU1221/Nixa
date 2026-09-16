@@ -19,7 +19,6 @@ import java.util.List;
 
 public class PdfToolsPanel extends JPanel implements ToolPanel {
     private final App app;
-    private final JLabel status = new JLabel("Choose a PDF tool to begin.");
 
     public PdfToolsPanel(App app) {
         this.app = app;
@@ -59,14 +58,6 @@ public class PdfToolsPanel extends JPanel implements ToolPanel {
         tools.add(toolCard("Compress PDF", "Reduce scanned PDF size with quality control.", "Open Compressor", () -> app.showPanel("compress")));
         top.add(tools);
         top.add(Box.createVerticalStrut(14));
-
-        status.setFont(Theme.uiFont(12));
-        status.setForeground(Theme.INK_SOFT);
-        status.setBorder(BorderFactory.createEmptyBorder(10, 12, 10, 12));
-        status.setOpaque(true);
-        status.setBackground(Theme.SURFACE_2);
-        status.setAlignmentX(Component.LEFT_ALIGNMENT);
-        top.add(status);
 
         JScrollPane scroll = new JScrollPane(top);
         scroll.setBorder(null);
@@ -238,12 +229,10 @@ public class PdfToolsPanel extends JPanel implements ToolPanel {
     }
 
     private void done(String message) {
-        status.setText(message);
         app.flash(message, StatusBar.Kind.OK);
     }
 
     private void fail(String message) {
-        status.setText(message);
         app.flash(message, StatusBar.Kind.ERR);
     }
 

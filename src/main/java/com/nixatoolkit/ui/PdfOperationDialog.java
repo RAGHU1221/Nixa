@@ -124,7 +124,7 @@ public class PdfOperationDialog extends JDialog {
         run.addActionListener(e -> runOperation());
         JButton close = new JButton("Close");
         close.addActionListener(e -> dispose());
-        JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        JPanel actions = new JPanel(new WrapLayout(FlowLayout.LEFT, 8, 0));
         actions.setOpaque(false);
         actions.add(add);
         actions.add(remove);

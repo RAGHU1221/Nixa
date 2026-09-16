@@ -42,18 +42,7 @@ public class CapturePanel extends JPanel implements ToolPanel {
         header.setFont(Theme.uiFont(Font.BOLD, 20));
         header.setAlignmentX(Component.LEFT_ALIGNMENT);
         top.add(header);
-
-        WrapLabel note = new WrapLabel("Open Camera அழுத்தினால் Windows camera preview திறக்கும். "
-            + "Capture செய்த image இங்கே preview ஆகும்; file photo-வும் தேர்வு செய்யலாம்.", 820);
-        note.setFont(Theme.uiFont(11));
-        note.setForeground(Theme.WARN);
-        note.setOpaque(true);
-        note.setBackground(Theme.WARN_BG);
-        note.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        note.setAlignmentX(Component.LEFT_ALIGNMENT);
-        note.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createEmptyBorder(10, 0, 10, 0), note.getBorder()));
-        top.add(note);
+        top.add(Box.createVerticalStrut(10));
 
         previewLabel.setPreferredSize(new Dimension(420, 320));
         previewLabel.setMaximumSize(new Dimension(420, 320));
@@ -64,7 +53,7 @@ public class CapturePanel extends JPanel implements ToolPanel {
         top.add(previewLabel);
         top.add(Box.createVerticalStrut(12));
 
-        JPanel btnRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        JPanel btnRow = new JPanel(new WrapLayout(FlowLayout.LEFT, 8, 0));
         btnRow.setOpaque(false);
         btnRow.setAlignmentX(Component.LEFT_ALIGNMENT);
         JButton pickBtn = new JButton("Pick Photo");

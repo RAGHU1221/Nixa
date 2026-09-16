@@ -33,7 +33,6 @@ public class CompressPanel extends JPanel implements ToolPanel {
         private final JComboBox<String> qualityMenu = new JComboBox<>(
             new String[]{"Best quality", "Balanced", "Smallest file"});
     private final JButton compressBtn = new JButton("Compress");
-    private final WrapLabel pdfNote = new WrapLabel("", 820);
     private final JLabel beforeLabel = new JLabel(" ");
     private final JLabel afterLabel = new JLabel(" ");
     private final JLabel beforeImgLabel = new JLabel();
@@ -55,17 +54,15 @@ public class CompressPanel extends JPanel implements ToolPanel {
         top.add(header);
         top.add(Box.createVerticalStrut(10));
 
-        JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        JPanel controls = new JPanel(new WrapLayout(FlowLayout.LEFT, 10, 10));
         controls.setBackground(Theme.SURFACE);
         controls.setAlignmentX(Component.LEFT_ALIGNMENT);
         JLabel tLbl = new JLabel("Target size (KB):");
         tLbl.setFont(Theme.uiFont(12));
-        controls.add(tLbl);
-        controls.add(targetEntry);
-        controls.add(new JLabel("Quality:"));
+        controls.add(Theme.pair(tLbl, targetEntry));
         qualityMenu.setFont(Theme.uiFont(12));
         qualityMenu.setPreferredSize(new Dimension(135, 30));
-        controls.add(qualityMenu);
+        controls.add(Theme.pair(new JLabel("Quality:"), qualityMenu));
         JButton chooseBtn = new JButton("Choose Photo or PDF");
         chooseBtn.setFont(Theme.uiFont(13));
         chooseBtn.addActionListener(e -> onChoose());
@@ -84,19 +81,6 @@ public class CompressPanel extends JPanel implements ToolPanel {
         controls.add(clearBtn);
         Theme.styleGreenButtons(controls);
         top.add(controls);
-
-        pdfNote.setText("PDF-ஐ compress பண்ணும்போது, நம்ம tool இந்த PDF-ல் "
-                + "இருக்கிற scan செய்த பட பக்கங்களை (JPEG images) கண்டுபிடித்து மறுபடி compress செய்யும் — "
-                + "scan செய்த/photo PDF-க்கு இது நல்லா வேலை செய்யும். Typed-text (born-digital) PDF-ல் "
-                + "பட பக்கங்கள் இல்லாததால் இது வேலை செய்யாது.");
-        pdfNote.setFont(Theme.uiFont(11));
-        pdfNote.setForeground(Theme.WARN);
-        pdfNote.setOpaque(true);
-        pdfNote.setBackground(Theme.WARN_BG);
-        pdfNote.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        pdfNote.setAlignmentX(Component.LEFT_ALIGNMENT);
-        pdfNote.setVisible(false);
-        top.add(pdfNote);
         top.add(Box.createVerticalStrut(8));
 
         JPanel resultPanel = new JPanel(new GridLayout(1, 2, 16, 0));
@@ -142,7 +126,6 @@ public class CompressPanel extends JPanel implements ToolPanel {
         resultH = 0;
         resultPages = 0;
         resultOverLimit = false;
-        pdfNote.setVisible(false);
         beforeLabel.setText(" ");
         afterLabel.setText(" ");
         beforeImgLabel.setIcon(null);
@@ -167,7 +150,6 @@ public class CompressPanel extends JPanel implements ToolPanel {
         afterLabel.setText(" ");
 
         if (isPdf) {
-            pdfNote.setVisible(true);
             srcImg = null;
             try {
                 List<byte[]> jpegs = PdfUtil.extractJpegPages(srcPath);
@@ -189,7 +171,6 @@ public class CompressPanel extends JPanel implements ToolPanel {
             return;
         }
 
-        pdfNote.setVisible(false);
         try {
             BufferedImage img = ImageIO.read(f);
             if (img == null) throw new IOException("Unsupported image");
@@ -222,7 +203,7 @@ public class CompressPanel extends JPanel implements ToolPanel {
         if (isPdf) {
             if (srcPath == null) return;
             compressBtn.setEnabled(false);
-            compressBtn.setText("⚙ Compressing...");
+            compressBtn.setText("Compressing...");
             app.flash("PDF compress ஆகிறது... பக்கங்கள் அதிகமா இருந்தா கொஞ்சம் நேரம் ஆகும்.", StatusBar.Kind.INFO);
             runPdfCompress(targetKb);
             return;
@@ -275,7 +256,7 @@ public class CompressPanel extends JPanel implements ToolPanel {
             @Override
             protected void done() {
                 compressBtn.setEnabled(true);
-                compressBtn.setText("⚙ Compress");
+                compressBtn.setText("Compress");
                 try {
                     Object[] r = get();
                     applyPdfCompressResult(r);

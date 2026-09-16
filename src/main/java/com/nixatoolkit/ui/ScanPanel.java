@@ -55,7 +55,7 @@ public class ScanPanel extends JPanel implements ToolPanel {
         statusLine.setAlignmentX(Component.LEFT_ALIGNMENT);
         top.add(statusLine);
 
-        JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        JPanel controls = new JPanel(new WrapLayout(FlowLayout.LEFT, 10, 10));
         controls.setBackground(Theme.SURFACE);
         controls.setAlignmentX(Component.LEFT_ALIGNMENT);
         bwCheck.setOpaque(false);
@@ -63,15 +63,13 @@ public class ScanPanel extends JPanel implements ToolPanel {
         controls.add(bwCheck);
         intentMenu.setFont(Theme.uiFont(12));
         controls.add(intentMenu);
-        controls.add(new JLabel("DPI:"));
         dpiMenu.setSelectedItem(300);
         dpiMenu.setFont(Theme.uiFont(12));
-        controls.add(dpiMenu);
-        controls.add(new JLabel("Scanner:"));
+        controls.add(Theme.pair(new JLabel("DPI:"), dpiMenu));
         scannerMenu.addItem("Auto / Default scanner");
         scannerMenu.setFont(Theme.uiFont(12));
         scannerMenu.setPreferredSize(new Dimension(190, 28));
-        controls.add(scannerMenu);
+        controls.add(Theme.pair(new JLabel("Scanner:"), scannerMenu));
         JButton scanBtn = new JButton("Scan from Scanner");
         scanBtn.setFont(Theme.uiFont(13));
         scanBtn.addActionListener(e -> onScanClicked());
@@ -99,7 +97,7 @@ public class ScanPanel extends JPanel implements ToolPanel {
         savePdfBtn.setEnabled(false);
         savePdfBtn.addActionListener(e -> onGeneratePdf());
         listTop.add(countLabel, BorderLayout.WEST);
-        JPanel saveButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
+        JPanel saveButtons = new JPanel(new WrapLayout(FlowLayout.RIGHT, 6, 0));
         saveButtons.setOpaque(false);
         saveButtons.add(saveImageBtn);
         saveButtons.add(savePdfBtn);
@@ -296,7 +294,7 @@ public class ScanPanel extends JPanel implements ToolPanel {
         textBox.add(dims);
         row.add(textBox, BorderLayout.CENTER);
 
-        JPanel btnRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 0));
+        JPanel btnRow = new JPanel(new WrapLayout(FlowLayout.RIGHT, 4, 0));
         btnRow.setOpaque(false);
         JButton up = new JButton("Prev");
         up.setPreferredSize(new Dimension(68, 34));

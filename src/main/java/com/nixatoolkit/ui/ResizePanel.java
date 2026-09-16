@@ -69,50 +69,32 @@ public class ResizePanel extends JPanel implements ToolPanel {
         top.add(header);
         top.add(Box.createVerticalStrut(10));
 
-        JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 10));
+        JPanel controls = new JPanel(new WrapLayout(FlowLayout.LEFT, 8, 10));
         controls.setBackground(Theme.SURFACE);
         controls.setAlignmentX(Component.LEFT_ALIGNMENT);
         JLabel pLbl = new JLabel("Preset:");
         pLbl.setFont(Theme.uiFont(12));
-        controls.add(pLbl);
         presetMenu.setFont(Theme.uiFont(12));
         presetMenu.addActionListener(e -> applyPreset());
-        controls.add(presetMenu);
-        controls.add(labeled("Width(px):"));
-        controls.add(wEntry);
-        controls.add(labeled("Height(px):"));
-        controls.add(hEntry);
-        controls.add(labeled("Max KB:"));
-        controls.add(kbEntry);
+        controls.add(Theme.pair(pLbl, presetMenu));
+        controls.add(Theme.pair(labeled("Width(px):"), wEntry));
+        controls.add(Theme.pair(labeled("Height(px):"), hEntry));
+        controls.add(Theme.pair(labeled("Max KB:"), kbEntry));
         borderCheck.setOpaque(false);
         borderCheck.setFont(Theme.uiFont(12));
-        controls.add(borderCheck);
         borderColorMenu.setFont(Theme.uiFont(12));
         borderColorMenu.setPreferredSize(new Dimension(90, 28));
-        controls.add(borderColorMenu);
-        controls.add(labeled("Border px:"));
+        controls.add(Theme.pair(borderCheck, borderColorMenu));
         borderWidthEntry.setPreferredSize(new Dimension(42, 26));
-        controls.add(borderWidthEntry);
-        controls.add(labeled("Crop position:"));
+        controls.add(Theme.pair(labeled("Border px:"), borderWidthEntry));
         verticalPositionSlider.setPreferredSize(new Dimension(120, 28));
         verticalPositionSlider.setToolTipText("Move crop from top to bottom to keep the head visible");
-        controls.add(verticalPositionSlider);
+        controls.add(Theme.pair(labeled("Crop position:"), verticalPositionSlider));
         top.add(controls);
         applyPreset();
-
-        WrapLabel note = new WrapLabel("இவை பொதுவாக பயன்படும் அளவுகள் — "
-                + "ஒவ்வொரு போர்டல் notification-லும் exact spec மாறலாம். Upload செய்யும் site-ல் சொல்லிருக்கிற "
-                + "அளவை பாத்து Custom-ல் மாற்றிக்கோங்க.", 820);
-        note.setFont(Theme.uiFont(11));
-        note.setForeground(Theme.WARN);
-        note.setOpaque(true);
-        note.setBackground(Theme.WARN_BG);
-        note.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        note.setAlignmentX(Component.LEFT_ALIGNMENT);
-        top.add(note);
         top.add(Box.createVerticalStrut(8));
 
-        JPanel btnRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        JPanel btnRow = new JPanel(new WrapLayout(FlowLayout.LEFT, 8, 0));
         btnRow.setOpaque(false);
         btnRow.setAlignmentX(Component.LEFT_ALIGNMENT);
         JButton chooseBtn = new JButton("Choose Photo");
@@ -134,10 +116,15 @@ public class ResizePanel extends JPanel implements ToolPanel {
         clearBtn.setPreferredSize(new Dimension(125, 36));
         clearBtn.setEnabled(false);
         clearBtn.addActionListener(e -> clearImage());
+        saveBtn.setFont(Theme.uiFont(13));
+        saveBtn.setPreferredSize(new Dimension(140, 36));
+        saveBtn.setEnabled(false);
+        saveBtn.addActionListener(e -> onSave());
         btnRow.add(chooseBtn);
         btnRow.add(scanBtn);
         btnRow.add(cropBtn);
         btnRow.add(runBtn);
+        btnRow.add(saveBtn);
         btnRow.add(clearBtn);
         top.add(btnRow);
         top.add(Box.createVerticalStrut(8));
@@ -163,12 +150,6 @@ public class ResizePanel extends JPanel implements ToolPanel {
         resultPanel.add(afterBox);
         top.add(resultPanel);
         top.add(Box.createVerticalStrut(6));
-
-        saveBtn.setFont(Theme.uiFont(13));
-        saveBtn.setEnabled(false);
-        saveBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
-        saveBtn.addActionListener(e -> onSave());
-        top.add(saveBtn);
 
         JScrollPane scroll = new JScrollPane(top);
         scroll.setBorder(null);

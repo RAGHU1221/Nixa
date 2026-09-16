@@ -7,6 +7,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -130,9 +131,11 @@ public class App extends JFrame {
         JMenu fileMenu = new JMenu("File");
         JMenuItem openFile = new JMenuItem("Open File...");
         openFile.setAccelerator(KeyStroke.getKeyStroke("control O"));
+        openFile.addActionListener(e -> openFileWithSystemApp());
         fileMenu.add(openFile);
         JMenuItem openFolder = new JMenuItem("Open Folder...");
         openFolder.setAccelerator(KeyStroke.getKeyStroke("control shift O"));
+        openFolder.addActionListener(e -> openFolderInExplorer());
         fileMenu.add(openFolder);
         fileMenu.addSeparator();
         JMenuItem exit = new JMenuItem("Exit / வெளியேறு");
@@ -195,6 +198,31 @@ public class App extends JFrame {
         Theme.styleButtons(header);
         Theme.styleControls(header);
         return header;
+    }
+
+    private void openFileWithSystemApp() {
+        JFileChooser chooser = new JFileChooser();
+        if (chooser.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) return;
+        File file = chooser.getSelectedFile();
+        try {
+            Desktop.getDesktop().open(file);
+            status.show("Opened: " + file.getName(), StatusBar.Kind.OK);
+        } catch (Exception e) {
+            status.show("File திறக்க முடியல்: " + e.getMessage(), StatusBar.Kind.ERR);
+        }
+    }
+
+    private void openFolderInExplorer() {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        if (chooser.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) return;
+        File folder = chooser.getSelectedFile();
+        try {
+            Desktop.getDesktop().open(folder);
+            status.show("Opened folder: " + folder.getAbsolutePath(), StatusBar.Kind.OK);
+        } catch (Exception e) {
+            status.show("Folder திறக்க முடியல்: " + e.getMessage(), StatusBar.Kind.ERR);
+        }
     }
 
     private void chooseOutputFolder() {
