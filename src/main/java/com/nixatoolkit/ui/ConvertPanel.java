@@ -22,7 +22,7 @@ public class ConvertPanel extends JPanel implements ToolPanel {
     private final JLabel countLabel = new JLabel("Files (0)");
     private final JComboBox<String> formatMenu = new JComboBox<>(new String[]{"JPEG", "PNG"});
     private final JSlider qualitySlider = new JSlider(10, 100, 85);
-    private final JButton convertBtn = new JButton("Convert All → Save to Folder");
+    private final JButton convertBtn = new JButton("Convert All -> Save to Folder");
 
     public ConvertPanel(App app) {
         this.app = app;
@@ -203,7 +203,7 @@ public class ConvertPanel extends JPanel implements ToolPanel {
             @Override
             protected void done() {
                 convertBtn.setEnabled(true);
-                convertBtn.setText("Convert All → Save to Folder");
+                convertBtn.setText("Convert All -> Save to Folder");
                 try {
                     int[] r = get();
                     reportConvertResult(r, outDir, fmt);
@@ -242,9 +242,9 @@ public class ConvertPanel extends JPanel implements ToolPanel {
 
     void reportConvertResult(int[] r, File outDir, String fmt) {
         if (r[1] > 0) {
-            app.flash("✓ " + r[0] + " converted, ✕ " + r[1] + " தோல்வி. Folder: " + outDir, StatusBar.Kind.WARN);
+            app.flash("" + r[0] + " converted, " + r[1] + " தோல்வி. Folder: " + outDir, StatusBar.Kind.WARN);
         } else {
-            app.flash("✓ " + r[0] + " images converted → " + outDir, StatusBar.Kind.OK);
+            app.flash("" + r[0] + " images converted -> " + outDir, StatusBar.Kind.OK);
         }
         if (r[0] > 0) {
             HistoryStore.logAction("convert", r[0] + " file(s) -> " + fmt + " in " + outDir.getName());

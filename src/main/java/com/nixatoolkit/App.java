@@ -40,7 +40,7 @@ public class App extends JFrame {
 
     private static final String[][] NAV_ITEMS = {
             {"home", "", "முகப்பு / Home"},
-            {"scan", "", "Scan → PDF"},
+            {"scan", "", "Scan -> PDF"},
             {"pdf-tools", "", "PDF Tools"},
             {"convert", "", "Image Converter"},
             {"compress", "", "Reduce File Size"},
@@ -238,7 +238,7 @@ public class App extends JFrame {
     private void showAbout() {
         JOptionPane.showMessageDialog(this,
                 "Nixa Toolkit — CSC Desktop (Java edition)\nVersion " + APP_VERSION + "\n\n"
-                        + "Scan → PDF  ·  Image Converter  ·  Reduce File Size  ·\n"
+                        + "Scan -> PDF  ·  Image Converter  ·  Reduce File Size  ·\n"
                         + "Form Photo / Signature  ·  Photo Import  ·  Activity History\n\n"
                         + "எல்லாமே இந்த கணினியிலேயே process ஆகும் — "
                         + "எந்த file/photo-வும் எங்கும் upload ஆகாது.",

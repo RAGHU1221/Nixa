@@ -159,7 +159,8 @@ public final class Theme {
         boolean danger = text.contains("delete") || text.contains("remove") || text.contains("clear");
         boolean primary = text.contains("save") || text.contains("create") || text.contains("compress")
             || text.contains("convert") || text.contains("scan") || text.contains("start")
-            || text.contains("merge") || text.contains("split") || text.contains("extract");
+            || text.contains("merge") || text.contains("split") || text.contains("extract")
+            || text.contains("check");
         button.setFont(uiFont(Font.PLAIN, 13));
         button.setFocusPainted(false);
         button.setOpaque(true);
@@ -196,7 +197,8 @@ public final class Theme {
                     || button.getText().toLowerCase().contains("scan")
                     || button.getText().toLowerCase().contains("merge")
                     || button.getText().toLowerCase().contains("split")
-                    || button.getText().toLowerCase().contains("extract"));
+                    || button.getText().toLowerCase().contains("extract")
+                    || button.getText().toLowerCase().contains("check"));
                 Color base = danger ? DANGER_BG : (cyan || primary ? BUTTON_ORANGE : SURFACE);
                 Color highlight = danger ? DANGER_BG : (cyan || primary ? BUTTON_ORANGE_LIGHT : SURFACE_2);
             if (!button.isEnabled()) {

@@ -230,7 +230,7 @@ public class ScanPanel extends JPanel implements ToolPanel {
     private void addPage(BufferedImage img) {
         pages.add(img);
         renderPages();
-        app.flash("✓ Page " + pages.size() + " சேர்க்கப்பட்டது.", StatusBar.Kind.OK);
+        app.flash("Page " + pages.size() + " சேர்க்கப்பட்டது.", StatusBar.Kind.OK);
     }
 
     private void renderPages() {
@@ -423,6 +423,8 @@ public class ScanPanel extends JPanel implements ToolPanel {
         private double scale;
         private int drawWidth;
         private int drawHeight;
+        private int offsetX;
+        private int offsetY;
         private Point dragStart;
         private Rectangle selection;
 
@@ -448,13 +450,27 @@ public class ScanPanel extends JPanel implements ToolPanel {
             scale = Math.min(1.0, Math.min(700.0 / image.getWidth(), 420.0 / image.getHeight()));
             drawWidth = Math.max(1, (int) Math.round(image.getWidth() * scale));
             drawHeight = Math.max(1, (int) Math.round(image.getHeight() * scale));
+            updateOffsets();
             selection = null;
             revalidate();
             repaint();
         }
 
+        /**
+         * Re-centers the (possibly rotated, differently-shaped) image inside
+         * this canvas's fixed 720x480 area, so straightening/rotating never
+         * shifts the picture off toward a corner.
+         */
+        private void updateOffsets() {
+            int w = getWidth() > 0 ? getWidth() : 720;
+            int h = getHeight() > 0 ? getHeight() : 480;
+            offsetX = Math.max(0, (w - drawWidth) / 2);
+            offsetY = Math.max(0, (h - drawHeight) / 2);
+        }
+
         private Point clamp(Point p) {
-            return new Point(Math.max(0, Math.min(drawWidth, p.x)), Math.max(0, Math.min(drawHeight, p.y)));
+            return new Point(Math.max(offsetX, Math.min(offsetX + drawWidth, p.x)),
+                    Math.max(offsetY, Math.min(offsetY + drawHeight, p.y)));
         }
 
         private void update(Point p) {
@@ -467,8 +483,8 @@ public class ScanPanel extends JPanel implements ToolPanel {
 
         Rectangle imageSelection() {
             if (selection == null || selection.width < 2 || selection.height < 2) return null;
-            int x = Math.min(image.getWidth() - 1, Math.max(0, (int) (selection.x / scale)));
-            int y = Math.min(image.getHeight() - 1, Math.max(0, (int) (selection.y / scale)));
+            int x = Math.min(image.getWidth() - 1, Math.max(0, (int) ((selection.x - offsetX) / scale)));
+            int y = Math.min(image.getHeight() - 1, Math.max(0, (int) ((selection.y - offsetY) / scale)));
             int width = Math.min(image.getWidth() - x, Math.max(1, (int) (selection.width / scale)));
             int height = Math.min(image.getHeight() - y, Math.max(1, (int) (selection.height / scale)));
             return new Rectangle(x, y, width, height);
@@ -476,8 +492,9 @@ public class ScanPanel extends JPanel implements ToolPanel {
 
         @Override protected void paintComponent(Graphics graphics) {
             super.paintComponent(graphics);
+            updateOffsets();
             Graphics2D g = (Graphics2D) graphics.create();
-            g.drawImage(image, 0, 0, drawWidth, drawHeight, null);
+            g.drawImage(image, offsetX, offsetY, drawWidth, drawHeight, null);
             if (selection != null && selection.width > 1 && selection.height > 1) {
                 g.setColor(new Color(0, 103, 192, 55));
                 g.fill(selection);
@@ -519,7 +536,7 @@ public class ScanPanel extends JPanel implements ToolPanel {
         try {
             ImageIO.write(ImageUtil.toRgb(pages.get(0)), "jpg", out);
             HistoryStore.logAction("scan", "page 1 -> " + out.getName());
-            app.flash("✓ Image saved: " + out.getName(), StatusBar.Kind.OK);
+            app.flash("Image saved: " + out.getName(), StatusBar.Kind.OK);
         } catch (IOException e) {
             app.flash("Image save தோல்வி: " + e.getMessage(), StatusBar.Kind.ERR);
         }
@@ -537,7 +554,7 @@ public class ScanPanel extends JPanel implements ToolPanel {
             byte[] pdf = PdfUtil.buildFromJpegPages(jpegs, sizes, 200.0);
             Files.write(out.toPath(), pdf);
             HistoryStore.logAction("scan", pages.size() + " page(s) -> " + out.getName());
-            app.flash("✓ PDF saved: " + out.getName(), StatusBar.Kind.OK);
+            app.flash("PDF saved: " + out.getName(), StatusBar.Kind.OK);
         } catch (IOException e) {
             app.flash("PDF save தோல்வி: " + e.getMessage(), StatusBar.Kind.ERR);
         }

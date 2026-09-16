@@ -63,7 +63,7 @@ public class HomePanel extends JPanel implements ToolPanel {
         JPanel cardsGrid = new JPanel(new GridLayout(0, 3, 10, 10));
         cardsGrid.setOpaque(false);
         cardsGrid.setAlignmentX(Component.LEFT_ALIGNMENT);
-        cardsGrid.add(new ToolCard(AppIcon.SCAN, "ஸ்கேன் → PDF", "Scan to PDF",
+        cardsGrid.add(new ToolCard(AppIcon.SCAN, "ஸ்கேன் -> PDF", "Scan to PDF",
                 "Scanner-ஐ நேரடியா இணைத்து scan பண்ணி, பல பக்கங்களை ஒரே PDF ஆக்கலாம்.",
                 () -> app.showPanel("scan")));
         cardsGrid.add(new ToolCard(AppIcon.CONVERT, "படிவ மாற்று", "Image Converter",

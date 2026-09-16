@@ -240,9 +240,9 @@ public class CompressPanel extends JPanel implements ToolPanel {
         afterLabel.setText("Compressed — " + ImageUtil.humanSize(r.data.length) + " (" + r.width + "x" + r.height + "px)");
         saveBtn.setEnabled(true);
         if (r.overLimit) {
-            app.flash("⚠ Target KB மிகவும் குறைவு — கிடைக்கிற அளவுக்கு குறைச்சிருக்கோம்.", StatusBar.Kind.WARN);
+            app.flash("Target KB மிகவும் குறைவு — கிடைக்கிற அளவுக்கு குறைச்சிருக்கோம்.", StatusBar.Kind.WARN);
         } else {
-            app.flash("✓ Target size-க்குள் compress ஆச்சு.", StatusBar.Kind.OK);
+            app.flash("Target size-க்குள் compress ஆச்சு.", StatusBar.Kind.OK);
         }
     }
 
@@ -307,9 +307,9 @@ public class CompressPanel extends JPanel implements ToolPanel {
                 + " (" + resultPages + " " + pageWord + ")");
         saveBtn.setEnabled(true);
         if (resultOverLimit) {
-            app.flash("⚠ Target KB மிகவும் குறைவு — கிடைக்கிற அளவுக்கு குறைச்சிருக்கோம்.", StatusBar.Kind.WARN);
+            app.flash("Target KB மிகவும் குறைவு — கிடைக்கிற அளவுக்கு குறைச்சிருக்கோம்.", StatusBar.Kind.WARN);
         } else {
-            app.flash("✓ Target size-க்குள் PDF compress ஆச்சு.", StatusBar.Kind.OK);
+            app.flash("Target size-க்குள் PDF compress ஆச்சு.", StatusBar.Kind.OK);
         }
     }
 
@@ -336,7 +336,7 @@ public class CompressPanel extends JPanel implements ToolPanel {
         }
         try {
             saveResultTo(out);
-            app.flash("✓ Saved: " + out.getName(), StatusBar.Kind.OK);
+            app.flash("Saved: " + out.getName(), StatusBar.Kind.OK);
         } catch (IOException e) {
             app.flash("Save தோல்வி: " + e.getMessage(), StatusBar.Kind.ERR);
         }

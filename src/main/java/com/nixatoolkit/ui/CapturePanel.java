@@ -175,7 +175,7 @@ public class CapturePanel extends JPanel implements ToolPanel {
         }
         try {
             savePhotoTo(out);
-            app.flash("✓ Saved: " + out.getName(), StatusBar.Kind.OK);
+            app.flash("Saved: " + out.getName(), StatusBar.Kind.OK);
         } catch (IOException e) {
             app.flash("Save தோல்வி: " + e.getMessage(), StatusBar.Kind.ERR);
         }

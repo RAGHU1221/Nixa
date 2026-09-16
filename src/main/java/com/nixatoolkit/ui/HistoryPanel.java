@@ -25,7 +25,7 @@ public class HistoryPanel extends JPanel implements ToolPanel {
 
     private static final Map<String, String[]> KIND_LABELS = new LinkedHashMap<>();
     static {
-        KIND_LABELS.put("scan", new String[]{"Scan → PDF", "Scan"});
+        KIND_LABELS.put("scan", new String[]{"Scan -> PDF", "Scan"});
         KIND_LABELS.put("convert", new String[]{"Image Converter", "Convert"});
         KIND_LABELS.put("compress", new String[]{"Reduce File Size", "Compress"});
         KIND_LABELS.put("resize", new String[]{"Form Photo / Signature", "Resize"});
@@ -110,7 +110,7 @@ public class HistoryPanel extends JPanel implements ToolPanel {
         if (choice != JOptionPane.YES_OPTION) return;
         HistoryStore.clearHistory();
         render();
-        app.flash("✓ History clear ஆச்சு.", StatusBar.Kind.OK);
+        app.flash("History clear ஆச்சு.", StatusBar.Kind.OK);
     }
 
     private void render() {

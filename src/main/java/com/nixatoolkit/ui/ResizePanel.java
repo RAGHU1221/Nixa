@@ -234,7 +234,7 @@ public class ResizePanel extends JPanel implements ToolPanel {
                     srcFile = null;
                     srcImg = ImageUtil.toRgb(image);
                     showSourceImage(ImageUtil.humanSize(image.getWidth() * (long) image.getHeight() * 3));
-                    app.flash("✓ Scan photo ready.", StatusBar.Kind.OK);
+                    app.flash("Scan photo ready.", StatusBar.Kind.OK);
                 } catch (Exception e) {
                     app.flash("Scan தோல்வி: " + e.getMessage(), StatusBar.Kind.ERR);
                 }
@@ -276,7 +276,7 @@ public class ResizePanel extends JPanel implements ToolPanel {
         graphics.dispose();
         srcImg = cropped;
         showSourceImage(ImageUtil.humanSize(selection.width * (long) selection.height * 3));
-        app.flash("✓ Photo crop செய்யப்பட்டது.", StatusBar.Kind.OK);
+        app.flash("Photo crop செய்யப்பட்டது.", StatusBar.Kind.OK);
     }
 
     private static final class DragCropPanel extends JPanel {
@@ -410,10 +410,10 @@ public class ResizePanel extends JPanel implements ToolPanel {
         } catch (IOException ignored) {
         }
         boolean within = r.data.length / 1024.0 <= targetKb + 1;
-        String mark = within ? "✓" : "⚠";
+        String mark = within ? "" : "Warning: ";
         afterLabel.setText(mark + " " + r.width + "x" + r.height + "px — " + ImageUtil.humanSize(r.data.length));
         saveBtn.setEnabled(true);
-        app.flash(within ? "✓ Ready." : "⚠ Closest possible size-க்கு தயார் ஆச்சு.",
+        app.flash(within ? "Ready." : "Closest possible size-க்கு தயார் ஆச்சு.",
                 within ? StatusBar.Kind.OK : StatusBar.Kind.WARN);
     }
 
@@ -435,7 +435,7 @@ public class ResizePanel extends JPanel implements ToolPanel {
         }
         try {
             saveResultTo(out);
-            app.flash("✓ Saved: " + out.getName(), StatusBar.Kind.OK);
+            app.flash("Saved: " + out.getName(), StatusBar.Kind.OK);
         } catch (IOException e) {
             app.flash("Save தோல்வி: " + e.getMessage(), StatusBar.Kind.ERR);
         }
