@@ -41,6 +41,18 @@ public final class ScannerUtil {
         }
     }
 
+    /**
+     * On some drivers (reported with a Canon MF3010), asking WIA for the
+     * scan item's XEXTENT/YEXTENT "SubTypeMax" does NOT return the true
+     * full flatbed size - it silently falls back to whatever small region
+     * the driver had last selected (e.g. from an earlier preview/crop),
+     * so the final scan only captures a small corner of the page even
+     * though the requested DPI and output canvas look like a full page.
+     * The fix: read the device's actual physical bed size (WIA properties
+     * 3074/3075, in thousandths of an inch) and compute the full-page
+     * extent from that directly, falling back to SubTypeMax only if the
+     * bed-size properties aren't exposed by the driver.
+     */
     private static final String WIA_SCRIPT =
             "param(\n" +
             "  [string]$Mode = \"list\",\n" +
@@ -83,8 +95,29 @@ public final class ScannerUtil {
             "  try { $item.Properties.Item(6148).Value = $Dpi } catch { }\n" +
             "  try { $item.Properties.Item(6149).Value = 0 } catch { }\n" +
             "  try { $item.Properties.Item(6150).Value = 0 } catch { }\n" +
-            "  try { $item.Properties.Item(6151).Value = $item.Properties.Item(6151).SubTypeMax } catch { }\n" +
-            "  try { $item.Properties.Item(6152).Value = $item.Properties.Item(6152).SubTypeMax } catch { }\n" +
+            "  $fullXExtent = 0\n" +
+            "  $fullYExtent = 0\n" +
+            "  try {\n" +
+            "    $hBed = $device.Properties.Item(3074).Value\n" +
+            "    $vBed = $device.Properties.Item(3075).Value\n" +
+            "    if ($hBed -gt 0 -and $vBed -gt 0) {\n" +
+            "      $fullXExtent = [int][Math]::Round(($hBed / 1000.0) * $Dpi)\n" +
+            "      $fullYExtent = [int][Math]::Round(($vBed / 1000.0) * $Dpi)\n" +
+            "    }\n" +
+            "  } catch { }\n" +
+            "  if ($fullXExtent -gt 0 -and $fullYExtent -gt 0) {\n" +
+            "    try {\n" +
+            "      $maxX = $item.Properties.Item(6151).SubTypeMax\n" +
+            "      $maxY = $item.Properties.Item(6152).SubTypeMax\n" +
+            "      if ($maxX -gt 0 -and $fullXExtent -gt $maxX) { $fullXExtent = $maxX }\n" +
+            "      if ($maxY -gt 0 -and $fullYExtent -gt $maxY) { $fullYExtent = $maxY }\n" +
+            "    } catch { }\n" +
+            "    try { $item.Properties.Item(6151).Value = $fullXExtent } catch { }\n" +
+            "    try { $item.Properties.Item(6152).Value = $fullYExtent } catch { }\n" +
+            "  } else {\n" +
+            "    try { $item.Properties.Item(6151).Value = $item.Properties.Item(6151).SubTypeMax } catch { }\n" +
+            "    try { $item.Properties.Item(6152).Value = $item.Properties.Item(6152).SubTypeMax } catch { }\n" +
+            "  }\n" +
             "} catch {\n" +
             "  Write-Error \"Scanner setup failed: $_\"\n" +
             "  exit 3\n" +
